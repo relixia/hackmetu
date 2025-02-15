@@ -13,6 +13,22 @@ interface DroppedItem {
   height: number;
 }
 
+const itemColors: Record<string, string> = {
+  "Table": "green",
+  "Cabinet": "yellow",
+  "Door": "gray",
+};
+
+// Function to determine background color
+const getItemColor = (itemName: string) => {
+  for (const key in itemColors) {
+    if (itemName.includes(key)) {
+      return itemColors[key];
+    }
+  }
+  return ""; // Default: No background color
+};
+
 const FloorPlan: React.FC<FloorPlanProps> = ({ width, length }) => {
   const [cellSize, setCellSize] = useState(20);
   const [containerSize, setContainerSize] = useState({ width: 0, length: 0 });
@@ -90,6 +106,25 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ width, length }) => {
     setItemsInCells(newItems);
   };
   
+  const handleCellClick = (row: number, col: number) => {
+    const index = row * width + col;
+    if (itemsInCells[index] !== null) {
+      const newItems = [...itemsInCells];
+  
+      // Remove item from all occupied cells
+      const item = newItems[index];
+      if (item) {
+        for (let r = 0; r < item.height; r++) {
+          for (let c = 0; c < item.width; c++) {
+            const itemIndex = (row + r) * width + (col + c);
+            newItems[itemIndex] = null;
+          }
+        }
+      }
+  
+      setItemsInCells(newItems);
+    }
+  };
   
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -118,19 +153,22 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ width, length }) => {
           const item = itemsInCells[index];
 
           return (
-            <div
-              key={index}
-              className="border bg-gray-200 flex justify-center items-center"
-              style={{
-                width: `${cellSize}px`,
-                height: `${cellSize}px`,
-                backgroundColor: item ? "#d3d3d3" : "",
-              }}
-              onDrop={(e) => handleDrop(e, row, col)}
-              onDragOver={handleDragOver}
-            >
-              {item && <span className="text-xs">{item.name}</span>}
-            </div>
+<div
+  key={index}
+  className="border flex justify-center items-center cursor-crosshair"
+  style={{
+    width: `${cellSize}px`,
+    height: `${cellSize}px`,
+    backgroundColor: item ? getItemColor(item.name) : "",
+  }}
+  onDrop={(e) => handleDrop(e, row, col)}
+  onDragOver={handleDragOver}
+  onClick={() => handleCellClick(row, col)}
+>
+</div>
+
+
+
           );
         })}
       </div>
