@@ -1,7 +1,6 @@
-// pages/login.tsx
 "use client";
 import React, { useState } from "react";
-import { supabase } from '../../supabaseClient';// Import the Supabase client
+import { supabase } from "../../supabaseClient"; // Import the Supabase client
 
 const LoginPage = () => {
   const [email, setEmail] = useState<string>("");
@@ -16,40 +15,39 @@ const LoginPage = () => {
       return;
     }
 
-    // Attempt to login with Supabase
     try {
-      // Use Supabase authentication to log the user in
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Use Supabase authentication to sign in the user
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
       });
 
-      if (error) {
-        setError(error.message);
+      if (authError) {
+        setError(authError.message);  // Store only the error message
+        console.log(authError.message, "Authentication failed");
         return;
       }
 
-      // Check if the user exists in the "personnels" table
+      // Query the personnels table for the user's details
       const { data: personnelData, error: personnelError } = await supabase
-        .from("personnels")
+        .from("Personnels")
         .select("*")
         .eq("email", email)
         .single();
 
       if (personnelError) {
-        setError("User not found.");
+        setError(`Personnel query error: ${personnelError.message}`);
         return;
       }
 
-      // Proceed after successful login
+      // Successful login; log or use the personnel data as needed
       console.log("Logged in successfully:", personnelData);
-
-      // Optionally redirect to a protected page
-      // router.push('/dashboard'); // Uncomment if you want to navigate
+      // For example, you might redirect the user:
+      // router.push('/dashboard');
 
     } catch (err) {
+      console.error("Unexpected error:", err);
       setError("An unexpected error occurred.");
-      console.error(err);
     }
   };
 
