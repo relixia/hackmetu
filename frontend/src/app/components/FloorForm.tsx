@@ -83,7 +83,7 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
               type="checkbox"
               checked={sameDimensions}
               onChange={toggleSameDimensions}
-              className="w-6 h-6 text-blue-600 bg-[#2B2B2B] border-gray-500 rounded focus:ring-blue-500"
+              className="w-6 h-6 bg-gray-800 border-gray-500 rounded"
             />
             <label className="text-lg font-semibold text-gray-300">All floors have the same dimensions?</label>
           </div>
@@ -151,7 +151,7 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
           <button
             type="button"
             onClick={calculateTotalSquareMeters}
-            className="w-full text-xl bg-blue-600 text-white p-4 rounded-lg font-medium hover:bg-blue-700 transition"
+            className="w-full text-xl bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
           >
             Calculate Square Meters
           </button>
@@ -164,7 +164,7 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
 
           <button
             type="submit"
-            className="w-full text-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-lg font-medium hover:opacity-90 transition"
+            className="w-full text-xl bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
           >
             Save & Continue
           </button>

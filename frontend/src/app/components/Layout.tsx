@@ -10,15 +10,27 @@ import FloorForm from './FloorForm';
 import FloorPlan from './FloorPlan';
 import ItemMenu from './ItemMenu';
 import PersonnelMenu from './PersonelMenu';
+import Floor3DAndUsers from './Data';
 
 interface LayoutProps {
   children: ReactNode;
+}
+
+export interface FloorData {
+  id: number;
+  name: string;
+  area: number;
+  occupantCount: number;
+  capacity: number;
+  tableCoordinates?: { x: number; z: number }[];
+  users?: string[];
 }
 
 const Layout = ({ children }: LayoutProps) => {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
+  const [floorsData, setFloorsData] = useState<FloorData[]>([]);
 
   useEffect(() => {
     const fetchFloors = async () => {
@@ -48,6 +60,15 @@ const Layout = ({ children }: LayoutProps) => {
     setSelectedFloorId(id);
   };
 
+  useEffect(() => {
+    fetch("http://localhost:8000/fetch-floors-with-personnels/14")
+      .then((res) => res.json())
+      .then((data: FloorData[]) => {
+        setFloorsData(data);
+      })
+      .catch((err) => console.error("Error fetching floors:", err));
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-lg font-bold text-gray-300">
@@ -60,10 +81,10 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#303030]">
       {/* 🔹 Fixed Top Bar with Navbar & Profile Button Slightly Lowered */}
       <div className="fixed top-[20px] left-0 w-full z-50 bg-[#1A1A1A] shadow-md px-16 py-6 flex justify-between items-center border-b border-gray-700 h-[90px]">
-        <div className="flex items-center mt-24"> {/* ⬇ Profile Button Moved Down Slightly */}
+        <div className="flex items-center mt-24">
           <ProfileButton setActiveComponent={setActiveComponent} />
         </div>
-        <div className="flex items-center mt-4"> {/* ⬇ Navbar Moved Down Slightly */}
+        <div className="flex items-center mt-4">
           <Navbar setActiveComponent={setActiveComponent} />
         </div>
       </div>
@@ -82,32 +103,27 @@ const Layout = ({ children }: LayoutProps) => {
             } 
             rightComponent={<ItemMenu cellSize={40} />} 
           />
+        ) : activeComponent === 'Staff' ? (
+          <ThreeColumnLayout 
+            leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
+            centerComponent={
+              selectedFloorId ? (
+                <FloorPlan floorId={selectedFloorId} />
+              ) : (
+                <div>Select a floor to view the floor plan.</div>
+              )
+            } 
+            rightComponent={<PersonnelMenu cellSize={40} />} 
+          />
+        ) : activeComponent === 'Data' ? (
+          <Floor3DAndUsers floors={floorsData} /> // ✅ Data Section Added Here
         ) : activeComponent === 'FloorForm' ? (
           <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
         ) : activeComponent === 'profile' ? (
-          <div className="text-gray-300">Profile Page</div>
+          <div>Profile Page</div>
         ) : (
           children
         )}
-        {activeComponent === 'Staff' ? (
-    <ThreeColumnLayout 
-      leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
-      centerComponent={
-        selectedFloorId ? (
-          <FloorPlan floorId={selectedFloorId} />
-        ) : (
-          <div>Select a floor to view the floor plan.</div>
-        )
-      } 
-      rightComponent={<PersonnelMenu cellSize={40} />} 
-    />
-  ) : activeComponent === 'FloorForm' ? (
-    <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
-  ) : activeComponent === 'profile' ? (
-    <div>Profile Page</div>
-  ) : (
-    children
-  )}
       </main>
     </div>
   );

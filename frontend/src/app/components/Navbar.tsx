@@ -16,6 +16,12 @@ const Navbar = ({ setActiveComponent }) => {
         Floorplan
       </button>
       <button 
+        onClick={() => setActiveComponent('Editor3D')} 
+        className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
+      >
+        3D Editor
+      </button>
+      <button 
         onClick={() => setActiveComponent('Data')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
       >
