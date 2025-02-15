@@ -49,3 +49,13 @@ async def update_personnel(personnel_id: int, personnel: PersonnelModel):
         return updated_personnel.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/authorize-personnel/{email}/{password}")
+async def authorize_personnel(email: str, password: str):
+    try:
+        personnel = supabase.table("Personnels").select('*').eq("email", email).eq("password", password).execute()
+        if not personnel.data:
+            raise HTTPException(status_code=404, detail="Personnel not found")
+        return personnel.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")

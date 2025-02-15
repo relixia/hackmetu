@@ -11,10 +11,11 @@ class PersonnelModel(BaseModel):
     password: str
     table_id: int
 
-class TableModel(BaseModel):
+class ObjectModel(BaseModel):
     state: bool
     floor_id: int
     table_coord_id: int
+    type: int
 
 class CoordinateModel(BaseModel):
     x: int
@@ -27,3 +28,4 @@ class FloorModel(BaseModel):
     building_id: int
     length: int
     width: int
+    capacity: int
