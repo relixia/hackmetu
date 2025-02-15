@@ -97,17 +97,19 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ width, length }) => {
   };
 
   return (
-    <div
-      className="flex justify-center items-center border border-gray-300 p-2 bg-white"
-      style={{ overflow: "hidden" }}
-    >
+    <div className="flex justify-center items-center bg-[#FBF8EF]"
+         style={{ display: "flex", overflow: "hidden" }}>
       <div
         className="grid gap-[1px]"
         style={{
           gridTemplateColumns: `repeat(${width}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${length}, ${cellSize}px)`,
           width: `${cellSize * width}px`,
-          height: `${cellSize * length}px`,
+          height: `${cellSize * length}px`, // Changed height to length
+          marginTop: "10px",  // Small space from the top
+          marginBottom: "10px",  // Small space from the bottom
+          marginLeft: "10px",
+          marginRight: "10px"
         }}
       >
         {Array.from({ length: length * width }).map((_, index) => {

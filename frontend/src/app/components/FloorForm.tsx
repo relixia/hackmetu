@@ -69,110 +69,115 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Kat Sayısı</label>
-        <input
-          type="number"
-          value={floorCount}
-          onChange={(e) => handleFloorCountChange(Number(e.target.value) || '')}
-          className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-          placeholder="Örn: 5"
-          required
-        />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={sameDimensions}
-          onChange={toggleSameDimensions}
-          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <label className="text-sm font-medium text-gray-700">Tüm katlar aynı mı?</label>
-      </div>
-
-      {sameDimensions ? (
-        <div className="p-4 border rounded-lg bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Tüm Katlar İçin Ölçüler</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
-              <input
-                type="number"
-                value={defaultDimensions.length}
-                onChange={(e) => handleDefaultDimensionChange('length', Number(e.target.value) || '')}
-                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                placeholder="Örn: 20"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
-              <input
-                type="number"
-                value={defaultDimensions.width}
-                onChange={(e) => handleDefaultDimensionChange('width', Number(e.target.value) || '')}
-                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                placeholder="Örn: 25"
-                required
-              />
-            </div>
+    <div className="flex flex-col items-center justify-center">
+      <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-lg border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">🏢 Bina Bilgileri</h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kat Sayısı</label>
+            <input
+              type="number"
+              value={floorCount}
+              onChange={(e) => handleFloorCountChange(Number(e.target.value) || '')}
+              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+              placeholder="Örn: 5"
+              required
+            />
           </div>
-        </div>
-      ) : (
-        floors.map((floor, index) => (
-          <div key={index} className="p-4 border rounded-lg bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Kat {index + 1}</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
-                <input
-                  type="number"
-                  value={floor.length}
-                  onChange={(e) => handleFloorChange(index, 'length', Number(e.target.value) || '')}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                  placeholder="Örn: 20"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
-                <input
-                  type="number"
-                  value={floor.width}
-                  onChange={(e) => handleFloorChange(index, 'width', Number(e.target.value) || '')}
-                  className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                  placeholder="Örn: 25"
-                  required
-                />
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={sameDimensions}
+              onChange={toggleSameDimensions}
+              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <label className="text-sm font-medium text-gray-700">Tüm katlar aynı mı?</label>
+          </div>
+
+          {sameDimensions ? (
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Tüm Katlar İçin Ölçüler</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
+                  <input
+                    type="number"
+                    value={defaultDimensions.length}
+                    onChange={(e) => handleDefaultDimensionChange('length', Number(e.target.value) || '')}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                    placeholder="Örn: 20"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
+                  <input
+                    type="number"
+                    value={defaultDimensions.width}
+                    onChange={(e) => handleDefaultDimensionChange('width', Number(e.target.value) || '')}
+                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                    placeholder="Örn: 25"
+                    required
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))
-      )}
+          ) : (
+            floors.map((floor, index) => (
+              <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Kat {index + 1}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
+                    <input
+                      type="number"
+                      value={floor.length}
+                      onChange={(e) => handleFloorChange(index, 'length', Number(e.target.value) || '')}
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="Örn: 20"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
+                    <input
+                      type="number"
+                      value={floor.width}
+                      onChange={(e) => handleFloorChange(index, 'width', Number(e.target.value) || '')}
+                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="Örn: 25"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
 
-      <button
-        type="button"
-        onClick={calculateTotalSquareMeters}
-        className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 transition"
-      >
-        Metrekareyi Hesapla
-      </button>
+          <button
+            type="button"
+            onClick={calculateTotalSquareMeters}
+            className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 transition"
+          >
+            Metrekareyi Hesapla
+          </button>
 
-      {totalSquareMeters !== null && (
-        <p className="text-center text-md font-semibold text-gray-800 mt-3">
-          Toplam <span className="text-blue-600">{totalSquareMeters} m²</span> alanınız var.
-        </p>
-      )}
+          {totalSquareMeters !== null && (
+            <p className="text-center text-md font-semibold text-gray-800 mt-3">
+              Toplam <span className="text-blue-600">{totalSquareMeters} m²</span> alanınız var.
+            </p>
+          )}
 
-      <button
-        type="submit"
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg font-medium hover:opacity-90 transition"
-      >
-        Kaydet & Devam Et
-      </button>
-    </form>
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg font-medium hover:opacity-90 transition"
+          >
+            Kaydet & Devam Et
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

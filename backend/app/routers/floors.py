@@ -25,22 +25,21 @@ async def fetch_floors():
 @router.post("/create-floor")
 async def create_floor(floor_data: dict):
     try:
-        floors = floor_data["floors"]
+        floors = floor_data.get("floors", [])
         total_square_meters = floor_data.get("totalSquareMeters")
 
-        # Log incoming request data
-        logging.info(f"Received floor data: {floor_data}")
+        # Ensure floors data is provided
+        if not floors:
+            raise HTTPException(status_code=400, detail="No floors data provided")
 
         # Step 1: Insert the building with the given floor_count
         building_data = {"floor_count": len(floors)}
         new_building = supabase.table("Buildings").insert(building_data).execute()
 
         if not new_building.data:
-            logging.error(f"Failed to create building: {new_building}")
             raise HTTPException(status_code=500, detail="Failed to create building")
 
         building_id = new_building.data[0]['id']
-        logging.info(f"Created building with ID: {building_id}")
 
         # Step 2: Insert each floor and link it to the building_id
         for index, floor in enumerate(floors):
@@ -62,13 +61,14 @@ async def create_floor(floor_data: dict):
             new_floor = supabase.table("Floors").insert(floor_data_with_building_id).execute()
 
             if not new_floor.data:
-                logging.error(f"Failed to create floor {index + 1}: {new_floor}")
                 raise HTTPException(status_code=500, detail=f"Failed to create floor {index + 1}")
 
         return {"message": "Building and Floors created successfully", "totalSquareMeters": total_square_meters}
-    
+
+    except HTTPException as http_err:
+        raise http_err  # Rethrow HTTP exceptions
+
     except Exception as e:
-        logging.error(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
 @router.delete("/delete-floor/{floor_id}")

@@ -1,53 +1,121 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 interface Floor {
   id: number;
   name: string;
-  population: number; // Number of people on this floor
-  capacity: number; // Maximum capacity of this floor
+  number: number;
+  population: number;
+  capacity: number;
+  building_id: number;
+  width: number;
+  length: number;
+}
+
+interface Building {
+  id: number;
+  name: string;
 }
 
 interface FloorSidebarProps {
-  onSelect: (id: number) => void;
+  onSelect: (id: number, width: number, length: number) => void;
 }
 
 const FloorSidebarComponent: React.FC<FloorSidebarProps> = ({ onSelect }) => {
   const [floors, setFloors] = useState<Floor[]>([]);
+  const [buildings, setBuildings] = useState<Building[]>([]);
+  const [currentBuilding, setCurrentBuilding] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate fetching floors from a database
-    setTimeout(() => {
-      setFloors([
-        { id: 1, name: "Floor 1", population: 20, capacity: 50 },
-        { id: 2, name: "Floor 2", population: 45, capacity: 60 },
-        { id: 3, name: "Floor 3", population: 70, capacity: 80 },
-        { id: 4, name: "Floor 4", population: 90, capacity: 100 },
-      ]);
-    }, 1000);
+    const fetchBuildingsAndFloors = async () => {
+      try {
+        const buildingsResponse = await axios.get("http://localhost:8000/fetch-buildings");
+        setBuildings(buildingsResponse.data);
+
+        if (buildingsResponse.data.length > 0) {
+          setCurrentBuilding(buildingsResponse.data[0].id);
+          const floorsResponse = await axios.get("http://localhost:8000/fetch-floors");
+          setFloors(floorsResponse.data);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to load buildings and floors.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuildingsAndFloors();
   }, []);
 
-  // Function to determine button color based on population/capacity ratio
   const getCapacityColor = (population: number, capacity: number) => {
     const usage = (population / capacity) * 100;
-    if (usage <= 50) return "bg-green-500"; // Low usage (Safe)
-    if (usage <= 80) return "bg-yellow-500"; // Medium usage (Warning)
-    return "bg-red-500"; // High usage (Full)
+    if (usage <= 50) return "bg-green-500";
+    if (usage <= 80) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const handleNextBuilding = () => {
+    const currentIndex = buildings.findIndex((b) => b.id === currentBuilding);
+    if (currentIndex < buildings.length - 1) {
+      setCurrentBuilding(buildings[currentIndex + 1].id);
+    }
+  };
+
+  const handlePrevBuilding = () => {
+    const currentIndex = buildings.findIndex((b) => b.id === currentBuilding);
+    if (currentIndex > 0) {
+      setCurrentBuilding(buildings[currentIndex - 1].id);
+    }
   };
 
   return (
-    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 backdrop-blur-md shadow-lg p-4 rounded-2xl w-44">
+    <div className="bg-[#896f22] backdrop-blur-md shadow-lg p-4 rounded-2xl w-56">
       <h2 className="text-white text-lg font-semibold text-center mb-4">Floors</h2>
-      <ul className="space-y-2">
-        {floors.map((floor) => (
-          <li
-            key={floor.id}
-            onClick={() => onSelect(floor.id)}
-            className={`cursor-pointer text-white text-center p-3 rounded-lg transition duration-300 ${getCapacityColor(floor.population, floor.capacity)}`}
-          >
-            {floor.name} ({floor.population}/{floor.capacity})
-          </li>
-        ))}
-      </ul>
+      <div className="text-center text-white font-bold text-md mb-3">
+        Building ID: {currentBuilding}
+      </div>
+
+      <div className="flex justify-between mb-4">
+        <button
+          onClick={handlePrevBuilding}
+          disabled={buildings.findIndex((b) => b.id === currentBuilding) === 0}
+          className="bg-gray-300 text-black px-3 py-1 rounded-lg disabled:opacity-50"
+        >
+          ◀ Prev
+        </button>
+        <button
+          onClick={handleNextBuilding}
+          disabled={buildings.findIndex((b) => b.id === currentBuilding) === buildings.length - 1}
+          className="bg-gray-300 text-black px-3 py-1 rounded-lg disabled:opacity-50"
+        >
+          Next ▶
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="text-white text-center">Loading...</p>
+      ) : error ? (
+        <p className="text-red-400 text-center">{error}</p>
+      ) : floors.length === 0 ? (
+        <p className="text-white text-center">No floors found.</p>
+      ) : (
+        <ul className="space-y-2">
+          {floors
+            .filter((floor) => floor.building_id === currentBuilding)
+            .map((floor) => (
+              <li
+                key={floor.id}
+                onClick={() => onSelect(floor.id, floor.width, floor.length)}
+                className={`cursor-pointer text-white text-center p-3 rounded-lg transition duration-300 ${getCapacityColor(floor.population || 0, floor.capacity || 1)}`}
+              >
+                Floor {floor.number} ({floor.population || 0}/{floor.capacity || 1})
+              </li>
+            ))}
+        </ul>
+      )}
     </div>
   );
 };
