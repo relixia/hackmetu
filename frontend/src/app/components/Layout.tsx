@@ -8,6 +8,7 @@ import ThreeColumnLayout from './ThreeColumnLayout';
 import FloorSidebarComponent from './FloorSidebarComponent';
 import FloorForm from './FloorForm';
 import FloorPlan from './FloorPlan';
+import ItemMenu from './ItemMenu';
 
 interface LayoutProps {
   children: ReactNode;
@@ -75,7 +76,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <div>Select a floor to view the floor plan.</div>
               )
             } 
-            rightComponent={<div>Right Panel</div>} 
+            rightComponent={<ItemMenu cellSize={40} />} 
           />
         ) : activeComponent === 'FloorForm' ? (
           <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
