@@ -3,6 +3,7 @@ import axios from "axios";
 
 interface FloorPlanProps {
   floorId: number;
+  floorId: number;
 }
 
 interface FloorData {
@@ -17,6 +18,22 @@ interface DroppedItem {
   width: number;
   height: number;
 }
+
+const itemColors: Record<string, string> = {
+  "Table": "#4CAF50", // Green
+  "Cabinet": "#FFC107", // Yellow
+  "Door": "#9E9E9E", // Gray
+};
+
+// Function to determine item color
+const getItemColor = (itemName: string) => {
+  for (const key in itemColors) {
+    if (itemName.includes(key)) {
+      return itemColors[key];
+    }
+  }
+  return "#1E1E1E"; // Default Dark Background
+};
 
 const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
   const [cellSize, setCellSize] = useState(20);
@@ -97,8 +114,12 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
     e.preventDefault();
   };
 
+  if (!floorData) {
+    return <div className="text-center text-lg font-semibold text-gray-400">Loading Floor Data...</div>;
+  }
+
   return (
-    <div className="flex justify-center items-center bg-[#FBF8EF]">
+    <div className="flex justify-center items-center bg-transparent p-0">
       <div
         className="grid gap-[1px]"
         style={{
@@ -116,11 +137,12 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
           return (
             <div
               key={index}
-              className="border flex justify-center items-center cursor-crosshair"
+              className="border border-gray-600 flex justify-center items-center cursor-crosshair transition-all hover:bg-[#444]"
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
-                backgroundColor: item?.type === "person" ? "lightgray" : "transparent", // Optional: indicate dropped cells
+                backgroundColor: item?.type === "person" ? "lightgray" : "transparent",
+                boxShadow: item ? "0px 0px 8px rgba(255, 255, 255, 0.2)" : "nonetransparent", // Optional: indicate dropped cells
               }}
               onDrop={(e) => handleDrop(e, row, col)}
               onDragOver={handleDragOver}
