@@ -10,6 +10,15 @@ class PersonnelModel(BaseModel):
     email: str
     password: str
     table_id: int
+    gender: int
+    x_coor: int
+    y_coor: int
+
+# Define the request model for the updated coordinates
+class UpdateCoordinatesRequest(BaseModel):
+    personnel_id: int
+    x_coor: int
+    y_coor: int
 
 class ObjectModel(BaseModel):
     state: bool

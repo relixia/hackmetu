@@ -9,6 +9,7 @@ import FloorSidebarComponent from './FloorSidebarComponent';
 import FloorForm from './FloorForm';
 import FloorPlan from './FloorPlan';
 import ItemMenu from './ItemMenu';
+import PersonnelMenu from './PersonelMenu';
 
 interface LayoutProps {
   children: ReactNode;
@@ -84,6 +85,25 @@ const Layout = ({ children }: LayoutProps) => {
         ) : (
           children
         )}
+        {activeComponent === 'Staff' ? (
+    <ThreeColumnLayout 
+      leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
+      centerComponent={
+        selectedFloorId ? (
+          <FloorPlan floorId={selectedFloorId} />
+        ) : (
+          <div>Select a floor to view the floor plan.</div>
+        )
+      } 
+      rightComponent={<PersonnelMenu cellSize={40} />} 
+    />
+  ) : activeComponent === 'FloorForm' ? (
+    <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
+  ) : activeComponent === 'profile' ? (
+    <div>Profile Page</div>
+  ) : (
+    children
+  )}
       </main>
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface FloorPlanProps {
-  floorId: number; // Floor ID to fetch dimensions
+  floorId: number;
 }
 
 interface FloorData {
@@ -11,26 +11,12 @@ interface FloorData {
 }
 
 interface DroppedItem {
+  type: "person" | "item";
+  id: number;
   name: string;
   width: number;
   height: number;
 }
-
-const itemColors: Record<string, string> = {
-  "Table": "green",
-  "Cabinet": "yellow",
-  "Door": "gray",
-};
-
-// Function to determine background color
-const getItemColor = (itemName: string) => {
-  for (const key in itemColors) {
-    if (itemName.includes(key)) {
-      return itemColors[key];
-    }
-  }
-  return "";
-};
 
 const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
   const [cellSize, setCellSize] = useState(20);
@@ -43,7 +29,7 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
         const response = await axios.get(`http://localhost:8000/fetch-floor/${floorId}`);
         const { width, length } = response.data;
         setFloorData({ width, length });
-        setItemsInCells(Array(width * length).fill(null)); // Reset items when switching floors
+        setItemsInCells(Array(width * length).fill(null));
       } catch (error) {
         console.error("Error fetching floor data:", error);
       }
@@ -69,66 +55,41 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   }, [floorData]);
 
-  const handleDrop = (e: React.DragEvent, row: number, col: number) => {
+  const handleDrop = async (e: React.DragEvent, row: number, col: number) => {
     e.preventDefault();
-    const itemName = e.dataTransfer.getData("item");
+    const personId = e.dataTransfer.getData("personId");
+    const personName = e.dataTransfer.getData("personName");
 
-    let itemWidth = 1;
-    let itemHeight = 1;
+    const newItems = [...itemsInCells];
+    const index = row * floorData.width + col;
 
-    if (itemName === "Table Medium") itemWidth = 2;
-    if (itemName === "Table Large") itemWidth = 3;
-    if (itemName === "Table Medium (Vertical)") {
-      itemWidth = 1;
-      itemHeight = 2;
-    }
-    if (itemName === "Table Large (Vertical)") {
-      itemWidth = 1;
-      itemHeight = 3;
-    }
-
-    if (!floorData || row + itemHeight > floorData.length || col + itemWidth > floorData.width) {
-      console.warn("Item is too large for the selected space!");
+    // Check if cell is occupied before dropping the item
+    if (newItems[index] !== null) {
+      console.warn("Cell already occupied!");
       return;
     }
 
-    const newItems = [...itemsInCells];
-
-    for (let r = 0; r < itemHeight; r++) {
-      for (let c = 0; c < itemWidth; c++) {
-        const index = (row + r) * floorData.width + (col + c);
-        if (newItems[index] !== null) {
-          console.warn("Space is already occupied!");
-          return;
-        }
-      }
-    }
-
-    for (let r = 0; r < itemHeight; r++) {
-      for (let c = 0; c < itemWidth; c++) {
-        const index = (row + r) * floorData.width + (col + c);
-        newItems[index] = { name: itemName, width: itemWidth, height: itemHeight };
-      }
-    }
+    // Add the person to the grid
+    newItems[index] = {
+      type: "person",
+      id: parseInt(personId),
+      name: personName,
+      width: 1, // Assuming each person takes 1x1 space
+      height: 1,
+    };
 
     setItemsInCells(newItems);
-  };
 
-  const handleCellClick = (row: number, col: number) => {
-    if (!floorData) return;
-    const index = row * floorData.width + col;
-    if (itemsInCells[index] !== null) {
-      const newItems = [...itemsInCells];
-      const item = newItems[index];
-      if (item) {
-        for (let r = 0; r < item.height; r++) {
-          for (let c = 0; c < item.width; c++) {
-            const itemIndex = (row + r) * floorData.width + (col + c);
-            newItems[itemIndex] = null;
-          }
-        }
-      }
-      setItemsInCells(newItems);
+    // Update coordinates of the personnel in the backend
+    try {
+      await axios.post("http://localhost:8000/update-personnel-coordinates/", {
+        personnel_id: parseInt(personId),
+        x_coor: col,
+        y_coor: row,
+      });
+      console.log("Coordinates updated successfully!");
+    } catch (error) {
+      console.error("Failed to update coordinates:", error);
     }
   };
 
@@ -136,24 +97,20 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
     e.preventDefault();
   };
 
-  if (!floorData) {
-    return <div className="text-center text-lg font-semibold">Loading Floor Data...</div>;
-  }
-
   return (
     <div className="flex justify-center items-center bg-[#FBF8EF]">
       <div
         className="grid gap-[1px]"
         style={{
-          gridTemplateColumns: `repeat(${floorData.width}, ${cellSize}px)`,
-          gridTemplateRows: `repeat(${floorData.length}, ${cellSize}px)`,
-          width: `${cellSize * floorData.width}px`,
-          height: `${cellSize * floorData.length}px`,
+          gridTemplateColumns: `repeat(${floorData?.width}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${floorData?.length}, ${cellSize}px)`,
+          width: `${cellSize * (floorData?.width || 0)}px`,
+          height: `${cellSize * (floorData?.length || 0)}px`,
         }}
       >
-        {Array.from({ length: floorData.length * floorData.width }).map((_, index) => {
-          const row = Math.floor(index / floorData.width);
-          const col = index % floorData.width;
+        {Array.from({ length: floorData?.length * floorData?.width }).map((_, index) => {
+          const row = Math.floor(index / (floorData?.width || 1));
+          const col = index % (floorData?.width || 1);
           const item = itemsInCells[index];
 
           return (
@@ -163,12 +120,23 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
-                backgroundColor: item ? getItemColor(item.name) : "",
+                backgroundColor: item?.type === "person" ? "lightgray" : "transparent", // Optional: indicate dropped cells
               }}
               onDrop={(e) => handleDrop(e, row, col)}
               onDragOver={handleDragOver}
-              onClick={() => handleCellClick(row, col)}
-            />
+            >
+              {item?.type === "person" && (
+                <span
+                  style={{
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                >
+                  {item.name} {/* Display personnel ID in grid */}
+                </span>
+              )}
+            </div>
           );
         })}
       </div>
