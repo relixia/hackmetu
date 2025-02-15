@@ -25,5 +25,5 @@ class BuildingModel(BaseModel):
 
 class FloorModel(BaseModel):
     building_id: int
-    height: int
+    length: int
     width: int

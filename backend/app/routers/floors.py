@@ -23,11 +23,52 @@ async def fetch_floors():
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
 @router.post("/create-floor")
-async def create_floor(floor: FloorModel):
+async def create_floor(floor_data: dict):
     try:
-        new_floor = supabase.table("Floors").insert(floor.dict()).execute()
-        return new_floor.data[0]
+        floors = floor_data["floors"]
+        total_square_meters = floor_data.get("totalSquareMeters")
+
+        # Log incoming request data
+        logging.info(f"Received floor data: {floor_data}")
+
+        # Step 1: Insert the building with the given floor_count
+        building_data = {"floor_count": len(floors)}
+        new_building = supabase.table("Buildings").insert(building_data).execute()
+
+        if not new_building.data:
+            logging.error(f"Failed to create building: {new_building}")
+            raise HTTPException(status_code=500, detail="Failed to create building")
+
+        building_id = new_building.data[0]['id']
+        logging.info(f"Created building with ID: {building_id}")
+
+        # Step 2: Insert each floor and link it to the building_id
+        for index, floor in enumerate(floors):
+            floor_data_with_building_id = {
+                **floor,
+                "building_id": building_id,
+                "length": floor.get("length", 0),  # Ensure length is included
+                "width": floor.get("width", 0),     # Ensure width is included
+            }
+
+            # Get the current highest floor number for the given building_id
+            existing_floors = supabase.table("Floors").select("number").eq("building_id", building_id).execute()
+            highest_floor_number = max([f["number"] for f in existing_floors.data], default=0)
+
+            # Set the new floor number (the next available number)
+            floor_data_with_building_id["number"] = highest_floor_number + 1
+
+            # Insert the floor with the new "number"
+            new_floor = supabase.table("Floors").insert(floor_data_with_building_id).execute()
+
+            if not new_floor.data:
+                logging.error(f"Failed to create floor {index + 1}: {new_floor}")
+                raise HTTPException(status_code=500, detail=f"Failed to create floor {index + 1}")
+
+        return {"message": "Building and Floors created successfully", "totalSquareMeters": total_square_meters}
+    
     except Exception as e:
+        logging.error(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
 @router.delete("/delete-floor/{floor_id}")
