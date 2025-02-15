@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: fastapi-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # Ensure backend is correctly mounted
+    env_file:
+      - ./backend/.env
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000  # Correct import path
+    networks:
+      - app-network  # Ensure the backend can talk to the frontend
+
+  frontend:
+    build: ./frontend
+    container_name: nextjs-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app  # Ensure frontend is correctly mounted
+      - "/app/node_modules"
+    environment:
+      - WDS_SOCKET_HOST=127.0.0.1 
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true 
+    env_file:
+      - ./frontend/.env.local
+    command: sh -c "npm install && npm audit fix && npm run dev"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
