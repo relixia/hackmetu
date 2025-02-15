@@ -18,7 +18,6 @@ const Layout = ({ children }: LayoutProps) => {
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
-  const [floorDimensions, setFloorDimensions] = useState<{ width: number; length: number } | null>(null);
 
   useEffect(() => {
     const fetchFloors = async () => {
@@ -27,11 +26,10 @@ const Layout = ({ children }: LayoutProps) => {
         const floors = response.data;
 
         if (floors && floors.length > 0) {
-          setActiveComponent('Floorplan');
+          setActiveComponent('Floorplan'); // Default to Floorplan if floors exist
           setSelectedFloorId(floors[0].id);
-          setFloorDimensions({ width: floors[0].width, length: floors[0].length });
         } else {
-          setActiveComponent('FloorForm');
+          setActiveComponent('FloorForm'); // Otherwise, show FloorForm
         }
       } catch (error) {
         console.error('Error fetching floors:', error);
@@ -44,10 +42,9 @@ const Layout = ({ children }: LayoutProps) => {
     fetchFloors();
   }, []);
 
-  const handleFloorSelect = (id: number, width: number, length: number) => {
-    console.log(`Selected floor ID: ${id}, Width: ${width}, Length: ${length}`);
+  const handleFloorSelect = (id: number) => {
+    console.log(`Selected floor ID: ${id}`);
     setSelectedFloorId(id);
-    setFloorDimensions({ width, length });
   };
 
   if (loading) {
@@ -60,18 +57,20 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FBF8EF] px-32 py-6">
+      {/* Top Bar with Navbar and Profile Button */}
       <div className="relative flex justify-between items-center px-2 py-2 bg-[#FBF8EF] rounded-b-lg mx-12">
         <ProfileButton setActiveComponent={setActiveComponent} />
         <Navbar setActiveComponent={setActiveComponent} />
       </div>
 
+      {/* Main Content */}
       <main className="flex-1 p-16 bg-[#FBF8EF] rounded-t-lg mx-12">
         {activeComponent === 'Floorplan' ? (
           <ThreeColumnLayout 
             leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
             centerComponent={
-              selectedFloorId && floorDimensions ? (
-                <FloorPlan width={floorDimensions.width} length={floorDimensions.length} />
+              selectedFloorId ? (
+                <FloorPlan floorId={selectedFloorId} />
               ) : (
                 <div>Select a floor to view the floor plan.</div>
               )
