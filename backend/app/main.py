@@ -1,8 +1,17 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from app.config import ALLOWED_ORIGINS
+from app.database import supabase
+from .routers import admins, personnels, tables, coordinates, buildings, floors
 
 app = FastAPI()
+app.include_router(admins.router)
+app.include_router(personnels.router)
+app.include_router(tables.router)
+app.include_router(coordinates.router)
+app.include_router(buildings.router)
+app.include_router(floors.router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -12,6 +21,3 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api/message")
-async def get_message():
-    return {"message": "Umide gotten from FastAPI!"}
