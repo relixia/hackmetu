@@ -1,0 +1,28 @@
+{
+    "floors": [
+      {
+        "id": 1,
+        "name": "Main Floor",
+        "width": 10,
+        "height": 8
+      },
+      {
+        "id": 2,
+        "name": "secound Floor",
+        "width": 10,
+        "height": 8
+      },
+      {
+        "id": 3,
+        "name": "third Floor",
+        "width": 10,
+        "height": 8
+      },
+      {
+        "id": 4,
+        "name": "fifth Floor",
+        "width": 10,
+        "height": 8
+      }
+    ]
+  }
