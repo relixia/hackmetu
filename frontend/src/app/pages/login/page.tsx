@@ -82,7 +82,7 @@ const LoginPage = () => {
   
       // 3) Redirect (or do anything else) after figuring out user type
       console.log("Login process done. Redirecting to /home...");
-      router.push("/pages/home");
+      router.push("/pages/dashboard");
   
     } catch (err: any) {
       console.error("An unexpected error occurred:", err);
