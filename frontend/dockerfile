@@ -10,6 +10,8 @@ COPY package.json package-lock.json ./
 # Install dependencies, including Supabase
 RUN npm install
 
+RUN npm install axios
+
 # Install the Supabase client library (if not already included in package.json)
 RUN npm install @supabase/supabase-js
 
