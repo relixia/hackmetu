@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Navbar from './Navbar';
 import ProfileButton from './ProfileButton';
@@ -19,6 +20,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedFloorId, setSelectedFloorId] = useState<number | null>(null);
   const [floorDimensions, setFloorDimensions] = useState<{ width: number; length: number } | null>(null);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const userId= searchParams.get('userId');
 
   useEffect(() => {
     const fetchFloors = async () => {
@@ -61,7 +66,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-[#FBF8EF] px-32 py-6">
       <div className="relative flex justify-between items-center px-2 py-2 bg-[#FBF8EF] rounded-b-lg mx-12">
-        <ProfileButton setActiveComponent={setActiveComponent} />
+      <ProfileButton setActiveComponent={setActiveComponent} userId={userId} />
         <Navbar setActiveComponent={setActiveComponent} />
       </div>
 

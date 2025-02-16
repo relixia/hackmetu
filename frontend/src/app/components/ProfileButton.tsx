@@ -1,12 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const ProfileButton = ({ setActiveComponent }) => {
+interface ProfileButtonProps {
+  setActiveComponent: React.Dispatch<React.SetStateAction<string | null>>;
+  userId: number | null; // Add userId prop
+}
+
+const ProfileButton = ({ setActiveComponent, userId }: ProfileButtonProps) => {
+  const router = useRouter();
+
+  const handleProfileRedirect = () => {
+    router.push(`/pages/profile?userId=${userId}`); // Navigate to the profile page
+  };
+
   return (
     <button
-      onClick={() => setActiveComponent('profile')}
+      onClick={handleProfileRedirect}
       className="flex items-center space-x-6 p-6 bg-white shadow-lg rounded-full hover:bg-gray-100 transition text-2xl"
     >
       <Image

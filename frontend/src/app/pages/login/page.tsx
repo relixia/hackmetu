@@ -53,9 +53,10 @@ const LoginPage = () => {
         console.log("Row found:", personnelData);
       }
 
+      const userId = personnelData?.id;
       // <--- Only addition: navigate to /home on success
       console.log("Login process done. Redirecting to /home...");
-      router.push("/pages/home");
+      router.push(`/pages/home?userId=${userId}`);  // Navigate to /home/<userId>
 
     } catch (err: any) {
       console.error("An unexpected error occurred:", err);

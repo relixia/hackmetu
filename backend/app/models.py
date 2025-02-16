@@ -29,3 +29,8 @@ class FloorModel(BaseModel):
     length: int
     width: int
     capacity: int
+
+class FeedbackModel(BaseModel):
+    title : str
+    content: str
+    personnel_id: int
