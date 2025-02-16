@@ -17,16 +17,19 @@ const ProfileButton = ({ setActiveComponent, userId }: ProfileButtonProps) => {
 
   return (
     <button
-      onClick={() => setActiveComponent('profile')}
-      className="p-8 bg-white shadow-lg rounded-full hover:bg-gray-100 transition"
+      //onClick={() => setActiveComponent('profile')}
+      className="bg-white shadow-lg rounded-full hover:bg-gray-100 transition"
     >
       <Image
-        src="/aholder.jpeg"
-        alt="Profile"
-        width={100}  // ⬆ Bigger Circle
-        height={100} // ⬆ Bigger Circle
-        className="rounded-full"
-      />
+  src="/logo.png"
+  alt="Profile Logo"
+  width={175}  // Increase the size here
+  height={175} // Increase the size here
+  className="rounded-full"
+/>
+
+
+
     </button>
   );
 };

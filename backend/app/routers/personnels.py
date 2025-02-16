@@ -7,6 +7,7 @@ router = APIRouter()
 
 class UpdateCoordinatesRequest(BaseModel):
     personnel_id: int
+    floor_id: int
     x_coor: int
     y_coor: int
 
@@ -84,6 +85,7 @@ async def update_personnel_coordinates_endpoint(request: UpdateCoordinatesReques
     try:
         # Update the personnel's coordinates using Supabase
         updated_personnel = supabase.table("Personnels").update({
+            "floor_id": request.floor_id,
             "x_coor": request.x_coor,
             "y_coor": request.y_coor
         }).eq("id", request.personnel_id).execute()
@@ -109,4 +111,21 @@ async def fetch_staff_personnel(floor_id: int):
         return personnel.data if personnel.data else []
     except Exception as e:
         print(f"Error fetching staff personnel: {e}")  # Debugging
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.put("/update-personnel-coordinates-null/{personnel_id}")
+async def update_personnel_coordinates_null(personnel_id: int):
+    try:
+        # Set x_coor, y_coor, and floor_id to null
+        updated_personnel = supabase.table("Personnels").update({
+            "x_coor": None,
+            "y_coor": None,
+            "floor_id": None
+        }).eq("id", personnel_id).execute()
+
+        if not updated_personnel.data:
+            raise HTTPException(status_code=404, detail="Personnel not found")
+        
+        return {"message": "Personnel coordinates and floor_id set to null successfully!"}
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")

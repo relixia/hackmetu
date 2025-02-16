@@ -11,7 +11,7 @@ interface FloorData {
 }
 
 interface DroppedItem {
-  type: "item";
+  type: "item" | "workspace";
   id: number;
   name: string;
   width: number;
@@ -85,7 +85,7 @@ const FloorPlan1: React.FC<FloorPlanProps> = ({ floorId }) => {
           const newGrid = [...prevGrid];
           placedObjects.forEach((item) => {
             const index = item.y_coor * (floorData?.width || 1) + item.x_coor;
-            newGrid[index] = item;
+            newGrid[index] = item; // Store objects in grid
           });
           return newGrid;
         });
@@ -120,8 +120,6 @@ const FloorPlan1: React.FC<FloorPlanProps> = ({ floorId }) => {
     e.preventDefault();
 
     const itemName = e.dataTransfer.getData("item");
-    const itemWidth = parseInt(e.dataTransfer.getData("width"));
-    const itemHeight = parseInt(e.dataTransfer.getData("height"));
 
     const itemData = itemMenu.find((item) => item.name === itemName);
     if (!itemData) {

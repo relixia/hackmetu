@@ -10,10 +10,13 @@ class PersonnelModel(BaseModel):
     surname: str
     email: str
     password: str
-    table_id: int
+    floor_id: Optional[int] = None
     gender: int
     x_coor: Optional[int] = None  # Optional, as some personnel might not have assigned coordinates
     y_coor: Optional[int] = None
+
+class UpdateCoordinatesNullRequest(BaseModel):
+    personnel_id: int
 
 
 class CreateItemRequest(BaseModel):

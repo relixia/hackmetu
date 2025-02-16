@@ -11,7 +11,8 @@ import FloorSidebarComponent from './FloorSidebarComponent';
 import FloorForm from './FloorForm';
 import FloorPlan1 from './FloorPlan1';
 import FloorPlan2 from './FloorPlan2';
-import ItemMenu from './ItemMenu';
+import ItemMenu1 from './ItemMenu1';
+import ItemMenu2 from './ItemMenu2';
 import PersonnelMenu from './PersonelMenu';
 import Floor3DAndUsers from './FloorPage';
 
@@ -164,7 +165,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="text-gray-400 text-center">Select a floor to view the floor plan.</div>
               )
             } 
-            rightComponent={<ItemMenu cellSize={40} />} 
+            rightComponent={<ItemMenu1 cellSize={40} />} 
           />
         ) : activeComponent === 'Staff' ? (
           <ThreeColumnLayout 
