@@ -168,7 +168,28 @@ const Layout = ({ children }: LayoutProps) => {
           children
         )}
       </main>
-    </div>
+    </motion.div>
+
+      {/* CSS for the Animated Background */}
+      <style jsx>{`
+        .animated-bg {
+          background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #303030, #1a1a1a);
+          background-size: 400% 400%;
+          animation: gradientAnimation 15s ease infinite;
+        }
+        @keyframes gradientAnimation {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+      `}</style>
+    </>
   );
 };
 
