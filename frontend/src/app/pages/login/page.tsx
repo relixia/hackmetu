@@ -14,54 +14,86 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
+  
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
     }
-
+  
     try {
       console.log("Attempting signInWithPassword...");
       const { data: signInData, error: signInError } = 
         await supabase.auth.signInWithPassword({ email, password });
-
+  
       if (signInError) {
         console.error("Sign-in error:", signInError);
         setError(signInError.message);
         return;
       }
-
+  
       console.log("Sign-in successful:", signInData);
-
-      console.log('Querying "Personnels" table...');
-      const { data: personnelData, error: personnelSelectError } =
+  
+      // 1) Check if user is an Admin
+      console.log('Querying "Admins" table...');
+      const { data: adminData, error: adminSelectError } =
         await supabase
-          .from("Personnels")
+          .from("Admins")
           .select("*")
           .eq("email", email)
           .single();
-
-      if (personnelSelectError && personnelSelectError.code !== "PGRST116") {
-        console.error("Selection error:", personnelSelectError);
-        setError(personnelSelectError.message);
+  
+      if (adminSelectError && adminSelectError.code !== "PGRST116") {
+        // "PGRST116" is "Row not found," which we want to ignore in this case
+        console.error("Admin selection error:", adminSelectError);
+        setError(adminSelectError.message);
         return;
       }
-
-      if (!personnelData) {
-        console.warn("No matching row found, optionally create one if needed.");
+  
+      let userType: "admin" | "personnel" | null = null;
+  
+      if (adminData) {
+        userType = "admin";
+        console.log("User is an Admin:", adminData);
+        const userId = adminData?.id;
+        router.push(`/pages/dashboard?userId=${userId}`);
       } else {
-        console.log("Row found:", personnelData);
-      }
-
-      // <--- Only addition: navigate to /home on success
+        // 2) If not found in Admins, check in Personnels
+        console.log('Not found in "Admins"; querying "Personnels" table...');
+        const { data: personnelData, error: personnelSelectError } =
+          await supabase
+            .from("Personnels")
+            .select("*")
+            .eq("email", email)
+            .single();
+  
+        if (personnelSelectError && personnelSelectError.code !== "PGRST116") {
+          console.error("Personnel selection error:", personnelSelectError);
+          setError(personnelSelectError.message);
+          return;
+        }
+  
+        if (!personnelData) {
+          console.warn("No matching row found in either table.");
+        } else {
+          userType = "personnel";
+          console.log("User is a Personnel:", personnelData);
+        }
+        console.log("User type determined as:", userType);
+  
+      // 3) Redirect (or do anything else) after figuring out user type
       console.log("Login process done. Redirecting to /home...");
-      router.push("/pages/home");
+      const userId = personnelData?.id;
+      router.push(`/pages/home?userId=${userId}`);
+      }
+  
+      
 
     } catch (err: any) {
       console.error("An unexpected error occurred:", err);
       setError("An unexpected error occurred.");
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
