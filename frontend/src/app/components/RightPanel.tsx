@@ -47,10 +47,10 @@ export default function FeedbackForm() {
   return (
     <div className="flex items-center bg-[#2A2A2A]">
       <div className="w-full max-w-md p-6 bg-[#2A2A2A] shadow-lg rounded-lg">
-        <h2 className="text-2xl font-semibold text-blue-800 mb-4">Floor Feedback Form</h2>
+        <h2 className="text-2xl font-semibold text-white-800 mb-4">Floor Feedback Form</h2>
 
         {/* Title Input */}
-        <label className="block text-blue-700 text-sm font-medium mb-1">Title</label>
+        <label className="block text-white-700 text-sm font-medium mb-1">Title</label>
         <input
           type="text"
           placeholder="Enter title..."
@@ -60,7 +60,7 @@ export default function FeedbackForm() {
         />
 
         {/* Feedback Input */}
-        <label className="block text-blue-700 text-sm font-medium mb-1">Feedback</label>
+        <label className="block text-white-700 text-sm font-medium mb-1">Feedback</label>
         <textarea
           placeholder="Write your feedback here..."
           value={feedback}

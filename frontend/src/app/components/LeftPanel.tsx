@@ -22,7 +22,7 @@ export default function LeftPanel({
   return (
     <div className="space-y-6">
       <div className="text-center  mb-4 bg">
-        <h1 className="text-2xl font-bold text-blue-800">
+        <h1 className="text-2xl font-bold text-white-800 capitalize" >
           {personnel?.name} {personnel?.surname}'s Profile
         </h1>
         <p className="text-gray-500 text-sm">
@@ -34,11 +34,11 @@ export default function LeftPanel({
       <div className="bg-[#2A2A2A] shadow rounded p-4">
         <div className="flex items-center space-x-2 mb-2">
           <strong className="text-white-700">Name:</strong>
-          <span className="text-white">{personnel?.name}</span>
+          <span className="text-white capitalize">{personnel?.name}</span>
         </div>
         <div className="flex items-center space-x-2 mb-2">
           <strong className="text-white-700">Surname:</strong>
-          <span className="text-white">{personnel?.surname}</span>
+          <span className="text-white capitalize">{personnel?.surname}</span>
         </div>
         <div className="flex items-center space-x-2 mb-2">
           <strong className="text-white-700">Email:</strong>
