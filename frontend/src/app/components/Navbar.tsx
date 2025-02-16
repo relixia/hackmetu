@@ -42,6 +42,13 @@ const Navbar = ({ setActiveComponent }) => {
       >
         Staff
       </button>
+
+      <button 
+        onClick={() => setActiveComponent('Dashboard')} 
+        className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
+      >
+        Dashboard
+      </button>
     </nav>
   );
 };

@@ -36,12 +36,14 @@ const LoginPage = () => {
 
       // 1) Check if user is an Admin
       console.log('Querying "Admins" table...');
-      const { data: adminData, error: adminSelectError } = await supabase
-        .from("Admins")
-        .select("*")
-        .eq("email", email)
-        .single();
-
+      const { data: adminData, error: adminSelectError } =
+        await supabase
+          .from("Admins")
+          .select("*")
+          .eq("email", email)
+          .single()
+          ;
+  
       if (adminSelectError && adminSelectError.code !== "PGRST116") {
         console.error("Admin selection error:", adminSelectError);
         setError(adminSelectError.message);
@@ -53,8 +55,8 @@ const LoginPage = () => {
       if (adminData) {
         userType = "admin";
         console.log("User is an Admin:", adminData);
-        const userId = adminData?.id;
-        router.push(`/pages/dashboard?userId=${userId}`);
+        const userId = adminData.id;
+        router.push(`/pages/home?userId=${userId}`);
       } else {
         // 2) If not found in Admins, check in Personnels
         console.log('Not found in "Admins"; querying "Personnels" table...');
@@ -63,8 +65,9 @@ const LoginPage = () => {
             .from("Personnels")
             .select("*")
             .eq("email", email)
-            .single();
-
+            .single()
+            ;
+  
         if (personnelSelectError && personnelSelectError.code !== "PGRST116") {
           console.error("Personnel selection error:", personnelSelectError);
           setError(personnelSelectError.message);
@@ -78,11 +81,11 @@ const LoginPage = () => {
           console.log("User is a Personnel:", personnelData);
         }
         console.log("User type determined as:", userType);
-
-        // 3) Redirect after determining user type
-        console.log("Login process done. Redirecting to /home...");
-        const userId = personnelData?.id;
-        router.push(`/pages/home?userId=${userId}`);
+  
+      // 3) Redirect (or do anything else) after figuring out user type
+      console.log("Login process done. Redirecting to /home...");
+      const userId = personnelData?.id;
+      router.push(`/pages/profile?userId=${userId}`);
       }
     } catch (err: any) {
       console.error("An unexpected error occurred:", err);
@@ -123,54 +126,40 @@ const LoginPage = () => {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <motion.label
-                htmlFor="email"
-                className="block text-gray-300 font-medium mb-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                Email
-              </motion.label>
-              <motion.input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-transparent text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00e6ff] focus:border-transparent placeholder-gray-500"
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5 }}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg
+                         focus:outline-none focus:ring-2 focus:ring-blue-500
+                         focus:border-transparent text-black"
+              required
+            />
+          </div>
 
-            <div className="mb-6">
-              <motion.label
-                htmlFor="password"
-                className="block text-gray-300 font-medium mb-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-              >
-                Password
-              </motion.label>
-              <motion.input
-                type="password"
-                id="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-transparent text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00e6ff] focus:border-transparent placeholder-gray-500"
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5 }}
-                required
-              />
-            </div>
+          <div className="mb-6">
+            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg
+                         focus:outline-none focus:ring-2 focus:ring-blue-500
+                         focus:border-transparent text-black"
+              required
+            />
+          </div>
 
             <motion.button
               type="submit"

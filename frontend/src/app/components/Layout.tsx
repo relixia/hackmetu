@@ -78,43 +78,7 @@ const Layout = ({ children }: LayoutProps) => {
       .catch((err) => console.error("Error fetching floors:", err));
   }, []);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (!userId) {
-          setError("Invalid user ID");
-          return;
-        }
-
-        // Fetch current signed-in user from Supabase
-        const { data: user, error: userError } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-          setError("You need to be logged in to view your profile");
-          return;
-        }
-
-        // Fetch personnel data using the userId
-        const { data: personnelData, error: personnelError } = await supabase
-          .from("Personnels")
-          .select("*")
-          .eq("id", userId) // Use the numeric userId
-          .single();
-
-        if (personnelError) {
-          setError(personnelError.message);
-        } else {
-          setPersonnel(personnelData);
-        }
-      } catch (err) {
-        setError("Error fetching profile data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [userId]);
+  
 
   useEffect(() => {
     if (activeComponent === 'Editor3D') {
@@ -127,6 +91,13 @@ const Layout = ({ children }: LayoutProps) => {
       router.push('/pages/360view');
     }
   }, [activeComponent, router]);
+
+    useEffect(() => {
+      if (activeComponent === 'Dashboard') {
+        router.push('/pages/dashboard');
+      }
+    }, [activeComponent, router]);
+
 
   if (loading) {
     return (
@@ -161,112 +132,43 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </div>
 
-        {/* 🔹 Main Content */}
-        <main className="flex-1 mx-auto mt-[120px] px-8 pb-8 overflow-auto">
-          {activeComponent === 'Floorplan' ? (
-            <ThreeColumnLayout 
-              leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
-              centerComponent={
-                selectedFloorId ? (
-                  <FloorPlan1 floorId={selectedFloorId} />
-                ) : (
-                  <div className="text-gray-400 text-center">Select a floor to view the floor plan.</div>
-                )
-              } 
-              rightComponent={<ItemMenu cellSize={40} />} 
-            />
-          ) : activeComponent === 'Staff' ? (
-            <ThreeColumnLayout 
-              leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
-              centerComponent={
-                selectedFloorId ? (
-                  <FloorPlan2 floorId={selectedFloorId} />
-                ) : (
-                  <div>Select a floor to view the floor plan.</div>
-                )
-              } 
-              rightComponent={<PersonnelMenu cellSize={40} />} 
-            />
-          ) : activeComponent === 'Data' ? (
-            <Floor3DAndUsers floors={floorsData} />
-          ) : activeComponent === 'FloorForm' ? (
-            <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
-          ) : activeComponent === 'profile' ? (
-            <div className="flex items-center justify-center min-h-screen">
-              <div className="w-full max-w-3xl p-8 bg-[#111] shadow-lg rounded-lg border border-[#00e6ff]">
-                <div className="text-center mb-8">
-                  <motion.h1 
-                    className="text-3xl font-semibold text-[#00e6ff]"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                  >
-                    {personnel?.name} {personnel?.surname}'s Profile
-                  </motion.h1>
-                  <p className="text-gray-500 text-sm">Personal details and information</p>
-                </div>
-        
-                {/* Profile Section */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                  <div className="flex flex-col items-start space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <strong className="text-gray-300">Name:</strong>
-                      <span className="text-white">{personnel?.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <strong className="text-gray-300">Surname:</strong>
-                      <span className="text-white">{personnel?.surname}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <strong className="text-gray-300">Email:</strong>
-                      <span className="text-white">{personnel?.email}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <strong className="text-gray-300">Table ID:</strong>
-                      <span className="text-white">{personnel?.table_id}</span>
-                    </div>
-                  </div>
-        
-                  {/* Edit Profile Section */}
-                  <div className="flex flex-col items-start space-y-4">
-                    <motion.button
-                      onClick={() => router.push(`/pages/feedback?personnel_id=${personnel?.id}`)}
-                      className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg"
-                      whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(0,230,255,0.8)" }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Add Feedback
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            children
-          )}
-        </main>
-      </motion.div>
-
-      {/* CSS for the Animated Background */}
-      <style jsx>{`
-        .animated-bg {
-          background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #303030, #1a1a1a);
-          background-size: 400% 400%;
-          animation: gradientAnimation 15s ease infinite;
-        }
-        @keyframes gradientAnimation {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-      `}</style>
-    </>
+      {/* 🔹 Adjust Main Content with Proper Top Margin */}
+      <main className="flex-1 mx-auto mt-[120px] px-8 pb-8 overflow-auto">
+        {activeComponent === 'Floorplan' ? (
+          <ThreeColumnLayout 
+            leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
+            centerComponent={
+              selectedFloorId ? (
+                <FloorPlan1 floorId={selectedFloorId} />
+              ) : (
+                <div className="text-gray-400 text-center">Select a floor to view the floor plan.</div>
+              )
+            } 
+            rightComponent={<ItemMenu cellSize={40} />} 
+          />
+        ) : activeComponent === 'Staff' ? (
+          <ThreeColumnLayout 
+            leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
+            centerComponent={
+              selectedFloorId ? (
+                <FloorPlan2 floorId={selectedFloorId} />
+              ) : (
+                <div>Select a floor to view the floor plan.</div>
+              )
+            } 
+            rightComponent={<PersonnelMenu cellSize={40} />} 
+          />
+        ) : activeComponent === 'Data' ? (
+          <Floor3DAndUsers floors={floorsData} /> // ✅ Data Section Added Here
+        ) : activeComponent === 'FloorForm' ? (
+          <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
+        ) : activeComponent === 'profile' ? (
+          <div className="text-center text-gray-400">Profile Page</div>
+        ) : (
+          children
+        )}
+      </main>
+    </div>
   );
 };
 
