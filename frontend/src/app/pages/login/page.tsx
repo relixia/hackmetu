@@ -55,7 +55,7 @@ const LoginPage = () => {
         userType = "admin";
         console.log("User is an Admin:", adminData);
         const userId = adminData?.id;
-        router.push(`/pages/dashboard?userId=${userId}`);
+        router.push(`/pages/home?userId=${userId}`);
       } else {
         // 2) If not found in Admins, check in Personnels
         console.log('Not found in "Admins"; querying "Personnels" table...');
@@ -83,7 +83,7 @@ const LoginPage = () => {
       // 3) Redirect (or do anything else) after figuring out user type
       console.log("Login process done. Redirecting to /home...");
       const userId = personnelData?.id;
-      router.push(`/pages/home?userId=${userId}`);
+      router.push(`/pages/personnels?userId=${userId}`);
       }
   
       
