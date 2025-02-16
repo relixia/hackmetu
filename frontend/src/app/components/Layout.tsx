@@ -47,7 +47,7 @@ const Layout = ({ children }: LayoutProps) => {
         const floors = response.data;
 
         if (floors && floors.length > 0) {
-          setActiveComponent('Floorplan'); // Default to Floorplan if floors exist
+          setActiveComponent('Data'); // Default to Floorplan if floors exist
           setSelectedFloorId(floors[0].id);
         } else {
           setActiveComponent('FloorForm'); // Otherwise, show FloorForm
@@ -183,7 +183,7 @@ const Layout = ({ children }: LayoutProps) => {
         ) : activeComponent === 'FloorForm' ? (
           <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
         ) : activeComponent === 'profile' ? (
-          <div className="flex items-center justify-center min-h-screen bg-gray-100">
+          <div className="flex items-center justify-center min-h-screen border-gray-700">
           <div className="w-full max-w-3xl p-8 bg-white shadow-md rounded-lg">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-semibold text-gray-800">
