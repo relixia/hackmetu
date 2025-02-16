@@ -1,4 +1,5 @@
-"use client"; 
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../supabaseClient";
@@ -158,6 +159,26 @@ export default function DashboardPage() {
     }
   };
 
+  // Drag-and-Drop Handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData("feedbackIndex", index.toString());
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    const dragIndex = parseInt(e.dataTransfer.getData("feedbackIndex"));
+    if (dragIndex === dropIndex) return; // If dragged feedback is the same as the dropped feedback
+
+    const updatedFeedbacks = [...feedbacks];
+    const [draggedFeedback] = updatedFeedbacks.splice(dragIndex, 1);
+    updatedFeedbacks.splice(dropIndex, 0, draggedFeedback);
+
+    setFeedbacks(updatedFeedbacks);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
   if (loading) return <div className="flex justify-center items-center h-screen text-lg">Loading...</div>;
   if (error) return <div className="text-red-500 text-center mt-5">Error: {error}</div>;
 
@@ -175,12 +196,21 @@ export default function DashboardPage() {
         ) : feedbacks.length === 0 ? (
           <p className="text-gray-500 mt-3">No feedback available.</p>
         ) : (
-          <div className="mt-3 space-y-4 max-h-96 overflow-y-auto">
-            {feedbacks.map((feedback) => {
+          <div
+            className="mt-3 space-y-4 max-h-96 overflow-y-auto"
+            onDragOver={handleDragOver}
+          >
+            {feedbacks.map((feedback, index) => {
               const personnel = personnelData.get(feedback.personnel_id);
 
               return (
-                <div key={feedback.id} className="p-4 bg-gray-100 rounded-lg shadow-sm flex items-start justify-between">
+                <div
+                  key={feedback.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className="p-4 bg-gray-100 rounded-lg shadow-sm flex items-start justify-between"
+                >
                   <div>
                     <h3 className="font-semibold text-gray-800">{feedback.title}</h3>
                     <p className="text-gray-600">{feedback.content}</p>
