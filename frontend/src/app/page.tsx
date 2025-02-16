@@ -1,332 +1,369 @@
 "use client";
 
-import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBuilding, faChartBar } from '@fortawesome/free-solid-svg-icons';
+import React, { useRef, useState, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Text, Environment } from "@react-three/drei";
+import * as THREE from "three";
+import { useRouter } from "next/navigation";
 
-export default function Home() {
-  const [floors, setFloors] = useState(1);
-  const [squareMeters, setSquareMeters] = useState(100);
-  const [personnel, setPersonnel] = useState([]);
-  const [selectedFloor, setSelectedFloor] = useState(1);
+/** DiveAnimation Component
+ *  Animates the camera from its current position to a target position,
+ *  simulating a dive into the building.
+ */
+function DiveAnimation({ onComplete }: { onComplete: () => void }) {
+  const { camera } = useThree();
+  const initialPosition = useRef(camera.position.clone());
+  // Set your desired target position for the dive here.
+  const targetPosition = new THREE.Vector3(0, 0, 5);
+  const time = useRef(0);
 
-  const handleAddPersonnel = (e) => {
-    e.preventDefault();
-    const newPersonnel = {
-      id: personnel.length + 1,
-      name: e.target.name.value,
-      role: e.target.role.value,
-      floor: selectedFloor,
-      position: { x: 0, y: 0 }, // Default position
-    };
-    setPersonnel([...personnel, newPersonnel]);
-    e.target.reset();
-  };
+  useFrame((state, delta) => {
+    time.current += delta;
+    // A 2-second dive animation; adjust the duration by changing the divisor.
+    const t = Math.min(time.current / 2, 1);
+    camera.position.lerpVectors(initialPosition.current, targetPosition, t);
+    if (t === 1) {
+      onComplete();
+    }
+  });
 
-  const handleDrag = (id, x, y) => {
-    const updatedPersonnel = personnel.map((p) =>
-      p.id === id ? { ...p, position: { x, y } } : p
-    );
-    setPersonnel(updatedPersonnel);
-  };
+  return null;
+}
 
-  const handleFloorChange = (floor) => {
-    setSelectedFloor(floor);
-  };
+/** AnimatedText Component */
+function AnimatedText({
+  phase,
+  onDisintegrateComplete,
+}: {
+  phase: string;
+  onDisintegrateComplete: () => void;
+}) {
+  const textRef = useRef<any>();
+
+  useFrame((state, delta) => {
+    if (!textRef.current) return;
+    if (phase === "intro") {
+      textRef.current.position.z = THREE.MathUtils.lerp(
+        textRef.current.position.z,
+        0,
+        delta
+      );
+    } else if (phase === "disintegrate") {
+      textRef.current.material.opacity = THREE.MathUtils.lerp(
+        textRef.current.material.opacity,
+        0,
+        delta * 2
+      );
+      textRef.current.scale.x = THREE.MathUtils.lerp(
+        textRef.current.scale.x,
+        1.2,
+        delta
+      );
+      textRef.current.scale.y = THREE.MathUtils.lerp(
+        textRef.current.scale.y,
+        1.2,
+        delta
+      );
+      if (textRef.current.material.opacity < 0.05) {
+        onDisintegrateComplete();
+      }
+    }
+  });
 
   return (
-    <div>
-      {/* Navigation Bar */}
-      <nav style={styles.nav}>
-        <div style={styles.navContainer}>
-          <h1 style={styles.logo}>CallCenter Yerleşim</h1>
-          <ul style={styles.navLinks}>
-            <li><a href="#home" style={styles.navLink}>Ana Sayfa</a></li>
-            <li><a href="#placement" style={styles.navLink}>Yerleşim</a></li>
-            <li><a href="#analysis" style={styles.navLink}>Analiz</a></li>
-          </ul>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section id="home" style={styles.hero}>
-        <div style={styles.heroContent}>
-          <h1 style={styles.heroTitle}>Call Center Personel Yerleşim Sistemi</h1>
-          <p style={styles.heroSubtitle}>Bina ve personel yerleşimini kolayca planlayın.</p>
-        </div>
-      </section>
-
-      {/* Building Input Section */}
-      <section id="placement" style={styles.section}>
-        <h2 style={styles.sectionTitle}>Bina Bilgileri</h2>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            Kat Sayısı:
-            <input
-              type="number"
-              value={floors}
-              onChange={(e) => setFloors(Number(e.target.value))}
-              style={styles.input}
-            />
-          </label>
-          <label style={styles.label}>
-            Metrekare (m²):
-            <input
-              type="number"
-              value={squareMeters}
-              onChange={(e) => setSquareMeters(Number(e.target.value))}
-              style={styles.input}
-            />
-          </label>
-        </div>
-      </section>
-
-      {/* Personnel Placement Section */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Personel Yerleşimi</h2>
-        <div style={styles.floorSelector}>
-          {Array.from({ length: floors }, (_, i) => (
-            <button
-              key={i + 1}
-              style={{
-                ...styles.floorButton,
-                ...(selectedFloor === i + 1 ? styles.activeFloorButton : {}),
-              }}
-              onClick={() => handleFloorChange(i + 1)}
-            >
-              Kat {i + 1}
-            </button>
-          ))}
-        </div>
-        <div style={styles.floorPlan}>
-          {Array.from({ length: squareMeters }, (_, i) => (
-            <div key={i} style={styles.gridCell}>
-              {personnel
-                .filter((p) => p.floor === selectedFloor && p.position.x === i % 10 && p.position.y === Math.floor(i / 10))
-                .map((p) => (
-                  <div
-                    key={p.id}
-                    style={styles.personnelCell}
-                    draggable
-                    onDragEnd={(e) => {
-                      const rect = e.target.getBoundingClientRect();
-                      const x = Math.floor((rect.left - e.currentTarget.parentElement.getBoundingClientRect().left) / 40);
-                      const y = Math.floor((rect.top - e.currentTarget.parentElement.getBoundingClientRect().top) / 40);
-                      handleDrag(p.id, x, y);
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faUser} />
-                  </div>
-                ))}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Personnel Form Section */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Personel Ekle</h2>
-        <form onSubmit={handleAddPersonnel} style={styles.form}>
-          <label style={styles.label}>
-            Ad:
-            <input type="text" name="name" required style={styles.input} />
-          </label>
-          <label style={styles.label}>
-            Rol:
-            <input type="text" name="role" required style={styles.input} />
-          </label>
-          <button type="submit" style={styles.ctaButton}>Personel Ekle</button>
-        </form>
-      </section>
-
-      {/* Density Analysis Section */}
-      <section id="analysis" style={styles.section}>
-        <h2 style={styles.sectionTitle}>Yoğunluk Analizi</h2>
-        <div style={styles.densityGrid}>
-          {Array.from({ length: floors }, (_, i) => (
-            <div key={i + 1} style={styles.densityCard}>
-              <h3>Kat {i + 1}</h3>
-              <p>Personel Sayısı: {personnel.filter((p) => p.floor === i + 1).length}</p>
-              <FontAwesomeIcon icon={faChartBar} size="2x" style={styles.densityIcon} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={styles.footer}>
-        <p style={styles.footerText}>© 2023 CallCenter Yerleşim. Tüm hakları saklıdır.</p>
-      </footer>
-    </div>
+    <Text
+      ref={textRef}
+      position={[0, 0, 30]}
+      fontSize={2}
+      color="white"
+      anchorX="center"
+      anchorY="middle"
+      material-opacity={1}
+      material-transparent={true}
+      maxWidth={25}
+      textAlign="center"
+    >
+      Do you want to revolutionize your call center architecture?
+    </Text>
   );
 }
 
-// Styles
-const styles = {
-  nav: {
-    backgroundColor: '#4a6cf7',
-    padding: '1rem 2rem',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1000,
-  },
-  navContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  logo: {
-    color: 'white',
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-  },
-  navLinks: {
-    listStyle: 'none',
-    display: 'flex',
-    gap: '2rem',
-  },
-  navLink: {
-    color: 'white',
-    textDecoration: 'none',
-    fontSize: '1rem',
-  },
-  hero: {
-    height: '50vh',
-    background: 'linear-gradient(135deg, #6e8efb, #4a6cf7)',
-    color: 'white',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    padding: '0 2rem',
-  },
-  heroContent: {
-    maxWidth: '800px',
-  },
-  heroTitle: {
-    fontSize: '3rem',
-    marginBottom: '1rem',
-  },
-  heroSubtitle: {
-    fontSize: '1.5rem',
-    marginBottom: '2rem',
-  },
-  section: {
-    padding: '4rem 2rem',
-    backgroundColor: '#f9f9f9',
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: '2.5rem',
-    marginBottom: '2rem',
-  },
-  inputGroup: {
-    display: 'flex',
-    gap: '2rem',
-    justifyContent: 'center',
-    marginBottom: '2rem',
-  },
-  label: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    fontSize: '1rem',
-  },
-  input: {
-    padding: '0.5rem',
-    fontSize: '1rem',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-  },
-  floorSelector: {
-    display: 'flex',
-    gap: '1rem',
-    justifyContent: 'center',
-    marginBottom: '2rem',
-  },
-  floorButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    backgroundColor: '#4a6cf7',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  activeFloorButton: {
-    backgroundColor: '#2a4cb7',
-  },
-  floorPlan: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(10, 40px)',
-    gap: '5px',
-    justifyContent: 'center',
-    margin: '0 auto',
-    width: 'fit-content',
-    border: '1px solid #ccc',
-    padding: '10px',
-    backgroundColor: 'white',
-  },
-  gridCell: {
-    width: '40px',
-    height: '40px',
-    border: '1px solid #ccc',
-    position: 'relative',
-  },
-  personnelCell: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#4a6cf7',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'grab',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    maxWidth: '400px',
-    margin: '0 auto',
-  },
-  ctaButton: {
-    padding: '1rem 2rem',
-    fontSize: '1rem',
-    color: '#4a6cf7',
-    background: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    transition: 'background 0.3s ease',
-  },
-  densityGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '2rem',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  densityCard: {
-    backgroundColor: 'white',
-    padding: '2rem',
-    borderRadius: '10px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-  },
-  densityIcon: {
-    color: '#4a6cf7',
-    marginTop: '1rem',
-  },
-  footer: {
-    backgroundColor: '#4a6cf7',
-    padding: '2rem',
-    textAlign: 'center',
-  },
-  footerText: {
-    color: 'white',
-    fontSize: '1rem',
-  },
-};
+/** ParticleExplosion Component */
+function ParticleExplosion({ onComplete }: { onComplete: () => void }) {
+  const pointsRef = useRef<any>();
+  const count = 1500;
+  const positions = useRef(new Float32Array(count * 3));
+  const velocities = useRef(new Float32Array(count * 3));
+
+  useEffect(() => {
+    for (let i = 0; i < count; i++) {
+      positions.current[i * 3 + 0] = 0;
+      positions.current[i * 3 + 1] = 0;
+      positions.current[i * 3 + 2] = 0;
+
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.random() * Math.PI;
+      const speed = Math.random() * 5 + 3;
+      velocities.current[i * 3 + 0] = Math.sin(phi) * Math.cos(theta) * speed;
+      velocities.current[i * 3 + 1] = Math.cos(phi) * speed;
+      velocities.current[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * speed;
+    }
+  }, []);
+
+  useFrame((state, delta) => {
+    for (let i = 0; i < count; i++) {
+      positions.current[i * 3 + 0] += velocities.current[i * 3 + 0] * delta;
+      positions.current[i * 3 + 1] += velocities.current[i * 3 + 1] * delta;
+      positions.current[i * 3 + 2] += velocities.current[i * 3 + 2] * delta;
+    }
+    if (pointsRef.current) {
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onComplete();
+    }, 2500);
+    return () => clearTimeout(timeout);
+  }, [onComplete]);
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions.current}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial color="white" size={0.15} transparent opacity={0.8} />
+    </points>
+  );
+}
+
+/** RotatingBuilding Component */
+function RotatingBuilding() {
+  const groupRef = useRef<any>();
+  useFrame((state, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 1.5;
+      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime / 5) * 0.1;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {/* Building Base */}
+      <mesh position={[0, -2, 0]}>
+        <boxGeometry args={[12, 1, 12]} />
+        <meshStandardMaterial color="#333" />
+      </mesh>
+      {/* Floors */}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <mesh key={i} position={[0, i * 1.5, 0]}>
+          <boxGeometry args={[10, 1.2, 10]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? "#555" : "#777"}
+            metalness={0.4}
+            roughness={0.3}
+          />
+        </mesh>
+      ))}
+      {/* Roof */}
+      <mesh position={[0, 8 * 1.5 + 0.6, 0]}>
+        <boxGeometry args={[10, 0.8, 10]} />
+        <meshStandardMaterial color="#222" />
+      </mesh>
+    </group>
+  );
+}
+
+/** FloatingParticles Component */
+function FloatingParticles() {
+  const pointsRef = useRef<any>();
+  const count = 500;
+  const positions = useRef(new Float32Array(count * 3));
+
+  useEffect(() => {
+    for (let i = 0; i < count; i++) {
+      positions.current[i * 3 + 0] = (Math.random() - 0.5) * 50;
+      positions.current[i * 3 + 1] = (Math.random() - 0.5) * 50;
+      positions.current[i * 3 + 2] = (Math.random() - 0.5) * 50;
+    }
+  }, []);
+
+  useFrame((state, delta) => {
+    for (let i = 0; i < count; i++) {
+      positions.current[i * 3 + 1] += delta * 0.1;
+      if (positions.current[i * 3 + 1] > 25) {
+        positions.current[i * 3 + 1] = -25;
+      }
+    }
+    if (pointsRef.current) {
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          array={positions.current}
+          count={count}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial color="#888" size={0.2} transparent opacity={0.6} />
+    </points>
+  );
+}
+
+/** CTAButton Component */
+function CTAButton({ onClick }: { onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        padding: "12px 24px",
+        fontSize: "20px",
+        background: "rgba(0, 0, 0, 0.8)",
+        color: "#00e6ff",
+        border: "2px solid #00e6ff",
+        borderRadius: "5px",
+        cursor: "pointer",
+        textTransform: "uppercase",
+        letterSpacing: "2px",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        boxShadow: hover
+          ? "0 0 25px rgba(0,230,255,0.8)"
+          : "0 0 15px rgba(0,230,255,0.5)",
+        transform: hover ? "scale(1.05)" : "scale(1)",
+      }}
+    >
+      Engage the Revolution
+    </button>
+  );
+}
+
+/** PortalTransition Component */
+function PortalTransition({ onComplete }: { onComplete: () => void }) {
+  const [scale, setScale] = useState(0);
+
+  useEffect(() => {
+    let start: number | null = null;
+    const duration = 2000; // 2 seconds animation
+    const animate = (timestamp: number) => {
+      if (start === null) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      setScale(progress);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        onComplete();
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [onComplete]);
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        width: "200vw",
+        height: "200vw",
+        background: "radial-gradient(circle, #555, #000)",
+        borderRadius: "50%",
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        zIndex: 30,
+        pointerEvents: "none",
+        boxShadow: "0 0 50px rgba(255,255,255,0.5)",
+      }}
+    />
+  );
+}
+
+/** LandingPage Component */
+export default function LandingPage() {
+  const [phase, setPhase] = useState("intro");
+  const [showExplosion, setShowExplosion] = useState(false);
+  const [showCTA, setShowCTA] = useState(false);
+  const [diving, setDiving] = useState(false);
+  const [portalActive, setPortalActive] = useState(false);
+  const router = useRouter();
+
+  // Transition from "intro" to "disintegrate" after 3 seconds.
+  useEffect(() => {
+    if (phase === "intro") {
+      const timeout = setTimeout(() => {
+        setPhase("disintegrate");
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [phase]);
+
+  const handleDisintegrationComplete = () => {
+    setShowExplosion(true);
+  };
+
+  const handleExplosionComplete = () => {
+    setPhase("building");
+    // Show the CTA button a few seconds after the building is visible.
+    setTimeout(() => {
+      setShowCTA(true);
+    }, 3000);
+  };
+
+  // Update the CTA click handler to trigger the dive animation.
+  const handleEnter = () => {
+    setDiving(true);
+  };
+
+  return (
+    <div
+      className="w-screen h-screen relative"
+      style={{ background: "linear-gradient(180deg, #000000, #1a1a1a)" }}
+    >
+      {showCTA && !portalActive && (
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <CTAButton onClick={handleEnter} />
+        </div>
+      )}
+      {portalActive && (
+        <PortalTransition onComplete={() => router.push("/pages/login")} />
+      )}
+      <Canvas
+        camera={{ position: [0, 0, 20], fov: 50 }}
+        style={{ filter: "contrast(1.2) brightness(1.1)" }}
+      >
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Environment preset="sunset" />
+        {(phase === "intro" || phase === "disintegrate") && (
+          <AnimatedText
+            phase={phase}
+            onDisintegrateComplete={handleDisintegrationComplete}
+          />
+        )}
+        {showExplosion && (
+          <ParticleExplosion onComplete={handleExplosionComplete} />
+        )}
+        {phase === "building" && <RotatingBuilding />}
+        <FloatingParticles />
+        {/* When diving is active, animate the camera dive */}
+        {diving && (
+          <DiveAnimation onComplete={() => setPortalActive(true)} />
+        )}
+        <OrbitControls enableZoom={false} enablePan={false} />
+      </Canvas>
+    </div>
+  );
+}
