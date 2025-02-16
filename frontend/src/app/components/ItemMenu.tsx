@@ -4,7 +4,7 @@ interface ItemMenuProps {
   cellSize: number;
 }
 
-const ItemMenu1: React.FC<ItemMenuProps> = ({ cellSize }) => {
+const ItemMenu: React.FC<ItemMenuProps> = ({ cellSize }) => {
   // Define items with different sizes (including vertical ones)
   const items = [
     { name: "WC", width: cellSize, height: cellSize },
@@ -49,5 +49,5 @@ const ItemMenu1: React.FC<ItemMenuProps> = ({ cellSize }) => {
   );
 };
 
-export default ItemMenu1;
+export default ItemMenu;
 

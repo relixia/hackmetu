@@ -25,13 +25,13 @@ const objectTypeMapping: Record<string, number> = {
   "Workspace Small": 5,
   "Workspace Medium": 5,
   "Workspace Large": 5,
-  "Cabinet": 4,
+  "WC": 4,
   "Door": 1,
 };
 
 // List of items
 const itemMenu = [
-  { name: "Cabinet", width: 1, height: 1 },
+  { name: "WC", width: 1, height: 1 },
   { name: "Door", width: 1, height: 2 },
   { name: "Workspace Small", width: 2, height: 1 },
   { name: "Workspace Medium", width: 2, height: 2 },
@@ -117,84 +117,89 @@ const FloorPlan1: React.FC<FloorPlanProps> = ({ floorId }) => {
 
   // Handle dropping an item onto the grid
   const handleDrop = async (e: React.DragEvent, row: number, col: number) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const itemName = e.dataTransfer.getData("item");
+  const itemName = e.dataTransfer.getData("item");
+  const itemData = itemMenu.find((item) => item.name === itemName);
 
-    const itemData = itemMenu.find((item) => item.name === itemName);
-    if (!itemData) {
-      console.warn("Dropped item is not in the allowed menu.");
-      return;
+  if (!itemData) {
+    console.warn("Dropped item is not in the allowed menu.");
+    return;
+  }
+
+  // Ensure the object fits inside the grid
+  if (row + itemData.height > floorData.length || col + itemData.width > floorData.width) {
+    console.warn("Object is out of grid bounds!");
+    return;
+  }
+
+  // Check if the space is available (no overlapping)
+  for (let r = row; r < row + itemData.height; r++) {
+    for (let c = col; c < col + itemData.width; c++) {
+      const index = r * floorData.width + c;
+      if (itemsInCells[index]) {
+        console.warn("Space is already occupied!");
+        return;
+      }
     }
+  }
 
-    // Ensure the object fits inside the grid
-    if (row + itemData.height > floorData.length || col + itemData.width > floorData.width) {
-      console.warn("Object is out of grid bounds!");
-      return;
-    }
+  // Create the object to add to the grid
+  const newItem: DroppedItem = {
+    type: "item",
+    id: Date.now(),
+    name: itemData.name,
+    width: itemData.width,
+    height: itemData.height,
+    x_coor: col,
+    y_coor: row,
+  };
 
-    // Check if the space is available (no overlapping)
+  // Add object to grid
+  setItemsInCells((prevGrid) => {
+    const newGrid = [...prevGrid];
     for (let r = row; r < row + itemData.height; r++) {
       for (let c = col; c < col + itemData.width; c++) {
         const index = r * floorData.width + c;
-        if (itemsInCells[index]) {
-          console.warn("Space is already occupied!");
-          return;
-        }
+        newGrid[index] = newItem;
       }
     }
+    return newGrid;
+  });
 
-    // Create the object to add to the grid
-    const newItem: DroppedItem = {
-      type: "item",
-      id: Date.now(),
-      name: itemData.name,
-      width: itemData.width,
-      height: itemData.height,
-      x_coor: col,
-      y_coor: row,
-    };
+  // Ensure valid object type
+  const objectType = objectTypeMapping[newItem.name];
+  if (!objectType) {
+    console.error(`Error: No type found for object ${newItem.name}`);
+    return;
+  }
 
-    // Add object to grid
-    setItemsInCells((prevGrid) => {
-      const newGrid = [...prevGrid];
-      for (let r = row; r < row + itemData.height; r++) {
-        for (let c = col; c < col + itemData.width; c++) {
-          const index = r * floorData.width + c;
-          newGrid[index] = newItem;
-        }
+  // Determine state: Tables = true, Others = false
+  const isTable = newItem.name.includes("Workspace");
+
+  // Make multiple API calls for each position covered by the object
+  for (let r = row; r < row + itemData.height; r++) {
+    for (let c = col; c < col + itemData.width; c++) {
+      try {
+        await axios.post(
+          "http://localhost:8000/create-or-update-object/",
+          {
+            state: isTable, // True for tables, False otherwise
+            floor_id: floorId,
+            o_type: objectType, // Map from predefined types
+            x_coor: c,
+            y_coor: r,
+          },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        console.log(`Object placed at x: ${c}, y: ${r}`);
+      } catch (error) {
+        console.error("Failed to save object placement:", error);
       }
-      return newGrid;
-    });
-
-    // Ensure valid object type
-    const objectType = objectTypeMapping[newItem.name];
-    if (!objectType) {
-      console.error(`Error: No type found for object ${newItem.name}`);
-      return;
     }
+  }
+};
 
-    // Determine state: Tables = true, Others = false
-    const isTable = newItem.name.includes("Workspace");
-
-    // Save object placement in the backend using create-or-update-object
-    try {
-      await axios.post(
-        "http://localhost:8000/create-or-update-object/",
-        {
-          state: isTable, // True for tables, False otherwise
-          floor_id: floorId,
-          o_type: objectType, // Map from predefined types
-          x_coor: col,
-          y_coor: row,
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      console.log("Object placement saved!");
-    } catch (error) {
-      console.error("Failed to save object placement:", error);
-    }
-  };
 
   // Handle drag over event
   const handleDragOver = (e: React.DragEvent) => {
