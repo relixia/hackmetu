@@ -118,7 +118,7 @@ const FloorSidebarComponent: React.FC<FloorSidebarProps> = ({ onSelect }) => {
                 onClick={() => onSelect(floor.id, floor.width, floor.length)}
                 className={`cursor-pointer text-white text-center p-3 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md ${getCapacityColor(floor.population || 0, floor.capacity || 1)}`}
               >
-                Floor {floor.number} ({floor.population || 0}/{floor.capacity || 1})
+                Floor {floor.number}
               </li>
             ))}
         </ul>

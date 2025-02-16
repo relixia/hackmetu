@@ -11,11 +11,13 @@ interface FloorData {
 }
 
 interface DroppedItem {
-  type: "person";
+  type: "person" | "workspace";
   id: number;
   name: string;
   width: number;
   height: number;
+  x_coor: number;
+  y_coor: number;
 }
 
 const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
@@ -40,33 +42,55 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   }, [floorId]);
 
-  // Fetch staff members and place them on the grid
+  // Fetch workspaces and staff members and place them on the grid
   useEffect(() => {
     if (!floorData) return; // Wait for floor data before proceeding
 
-    const fetchStaffPersonnel = async () => {
+    const fetchObjectsAndPersonnel = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/fetch-staff-personnel/${floorId}`);
-        const staffMembers: DroppedItem[] = response.data;
+        const objectsResponse = await axios.get(`http://localhost:8000/fetch-objects/?floor_id=${floorId}`);
+        const objects: DroppedItem[] = objectsResponse.data;
 
+        const staffResponse = await axios.get(`http://localhost:8000/fetch-staff-personnel/${floorId}`);
+        const staffMembers = staffResponse.data;
+
+        console.log("Fetched workspaces:", objects);
         console.log("Fetched staff members:", staffMembers);
 
-        // Populate grid with staff members only
+        // Populate grid with workspaces (o_type = 5) and staff members
         const newGrid = Array(floorData.width * floorData.length).fill(null);
-        staffMembers.forEach((person) => {
-          // Using person.x_coor and person.y_coor directly for proper index calculation
-          const index = person.y_coor * floorData.width + person.x_coor;
-          console.log(`Placing ${person.name} at index ${index} (x: ${person.x_coor}, y: ${person.y_coor})`);
-          newGrid[index] = person;
+
+        // Add workspace objects to the grid
+        objects.forEach((object) => {
+          if (object.o_type === 5) {
+            const index = object.y_coor * floorData.width + object.x_coor;
+            newGrid[index] = { ...object, type: "workspace" }; // Store workspace in grid
+          }
+        });
+
+        // Add staff members to the grid
+        staffMembers.forEach((person: any) => {
+          if (person.x_coor !== null && person.y_coor !== null) {
+            const index = person.y_coor * floorData.width + person.x_coor;
+            newGrid[index] = { 
+              type: "person", 
+              id: person.id,
+              name: `${person.name} ${person.surname}`, // Full name
+              width: 1,
+              height: 1,
+              x_coor: person.x_coor,
+              y_coor: person.y_coor
+            }; // Store personnel in grid
+          }
         });
 
         setItemsInCells([...newGrid]); // Force state update
       } catch (error) {
-        console.error("Error fetching staff personnel:", error);
+        console.error("Error fetching objects or personnel:", error);
       }
     };
 
-    fetchStaffPersonnel();
+    fetchObjectsAndPersonnel();
   }, [floorId, floorData]); // Runs after floorData is available
 
   // Adjust cell size based on screen width
@@ -85,28 +109,33 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   }, [floorData]);
 
-  // Handle dropping a staff member
+  // Handle dropping a staff member only in workspace cells
   const handleDrop = async (e: React.DragEvent, row: number, col: number) => {
     e.preventDefault();
+
+    const index = row * floorData.width + col;
+    const cell = itemsInCells[index];
+
+    if (cell?.type !== "workspace") {
+      // Only allow drop in workspace cells
+      console.warn("Drop not allowed here!");
+      return;
+    }
+
     const personId = e.dataTransfer.getData("personId");
     const personName = e.dataTransfer.getData("personName");
 
     const newItems = [...itemsInCells];
-    const index = row * floorData.width + col;
 
-    // Check if cell is occupied before dropping the item
-    if (newItems[index] !== null) {
-      console.warn("Cell already occupied!");
-      return;
-    }
-
-    // Add the person to the grid
+    // Add the person to the workspace grid cell
     newItems[index] = {
       type: "person",
       id: parseInt(personId),
       name: personName,
       width: 1,
       height: 1,
+      x_coor: col,
+      y_coor: row,
     };
 
     setItemsInCells(newItems);
@@ -115,6 +144,7 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
     try {
       await axios.post("http://localhost:8000/update-personnel-coordinates/", {
         personnel_id: parseInt(personId),
+        floor_id: floorId,
         x_coor: col,
         y_coor: row,
       });
@@ -124,9 +154,40 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   };
 
-  // Handle drag over event
-  const handleDragOver = (e: React.DragEvent) => {
+  // Handle delete action (remove personnel from the grid and set coordinates to null)
+  const handleDelete = async (personId: number, row: number, col: number) => {
+    const index = row * floorData.width + col;
+    const newItems = [...itemsInCells];
+  
+    // Only remove the person (not the workspace) from the grid
+    if (newItems[index]?.type === "person") {
+      newItems[index] = null;  // Remove personnel from the grid but leave workspace
+      setItemsInCells(newItems);  // Update grid with removed personnel
+    }
+  
+    // Update the coordinates to null for this personnel in the backend
+    try {
+      await axios.put(`http://localhost:8000/update-personnel-coordinates-null/${personId}`);
+      console.log("Personnel deleted and coordinates set to null!");
+    } catch (error) {
+      console.error("Failed to delete personnel:", error);
+    }
+  };
+  
+
+  // Handle drag over event only for workspace cells
+  const handleDragOver = (e: React.DragEvent, row: number, col: number) => {
     e.preventDefault();
+
+    const index = row * floorData.width + col;
+    const cell = itemsInCells[index];
+
+    // Only allow drag over for workspace cells
+    if (cell?.type === "workspace") {
+      return;
+    } else {
+      e.preventDefault();
+    }
   };
 
   if (!floorData) {
@@ -155,11 +216,11 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
-                backgroundColor: item?.type === "person" ? "lightgray" : "transparent",
+                backgroundColor: item?.type === "person" ? "lightgray" : item?.type === "workspace" ? "lightblue" : "transparent",
                 boxShadow: item ? "0px 0px 8px rgba(255, 255, 255, 0.2)" : "none",
               }}
               onDrop={(e) => handleDrop(e, row, col)}
-              onDragOver={handleDragOver}
+              onDragOver={(e) => handleDragOver(e, row, col)}
             >
               {item?.type === "person" && (
                 <span
@@ -167,9 +228,11 @@ const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
                     color: "black",
                     fontWeight: "bold",
                     fontSize: "14px",
+                    cursor: "pointer",
                   }}
+                  onClick={() => handleDelete(item.id, row, col)} // Delete on click
                 >
-                  {item.name}
+                  {item.name} {/* Display personnel name */}
                 </span>
               )}
             </div>
