@@ -2,15 +2,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from app.config import ALLOWED_ORIGINS
 from app.database import supabase
-from .routers import admins, personnels, objects, coordinates, buildings, floors
+from .routers import admins, personnels, objects, buildings, floors, feedbacks
 
 app = FastAPI()
 app.include_router(admins.router)
 app.include_router(personnels.router)
 app.include_router(objects.router)
-app.include_router(coordinates.router)
 app.include_router(buildings.router)
 app.include_router(floors.router)
+app.include_router(feedbacks.router)
 
 
 app.add_middleware(

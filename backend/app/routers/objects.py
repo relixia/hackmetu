@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/fetch-object/{object_id}")
 async def fetch_object(object_id: int):
     try:
-        object = supabase.object("Objects").select('*').eq("id", object_id).execute()
+        object = supabase.table("Objects").select('*').eq("id", object_id).execute()
         if not object.data:
             raise HTTPException(status_code=404, detail="object not found")
         return object.data[0]
@@ -17,7 +17,7 @@ async def fetch_object(object_id: int):
 @router.get("/fetch-objects")
 async def fetch_objects():
     try:
-        objects = supabase.object("Objects").select('*').execute()
+        objects = supabase.table("Objects").select('*').execute()
         return objects.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
@@ -25,7 +25,7 @@ async def fetch_objects():
 @router.post("/create-object")
 async def create_object(object: ObjectModel):
     try:
-        new_object = supabase.object("Objects").insert(object.dict()).execute()
+        new_object = supabase.table("Objects").insert(object.dict()).execute()
         return new_object.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
@@ -33,7 +33,7 @@ async def create_object(object: ObjectModel):
 @router.delete("/delete-object/{object_id}")
 async def delete_object(object_id: int):
     try:
-        object = supabase.object("Objects").delete().eq("id", object_id).execute()
+        object = supabase.table("Objects").delete().eq("id", object_id).execute()
         if not object.data:
             raise HTTPException(status_code=404, detail="object not found")
         return object.data[0]
@@ -43,7 +43,7 @@ async def delete_object(object_id: int):
 @router.put("/update-object/{object_id}")
 async def update_object(object_id: int, object: ObjectModel):
     try:
-        updated_object = supabase.object("Objects").update(object.dict()).eq("id", object_id).execute()
+        updated_object = supabase.table("Objects").update(object.dict()).eq("id", object_id).execute()
         if not updated_object.data:
             raise HTTPException(status_code=404, detail="object not found")
         return updated_object.data[0]

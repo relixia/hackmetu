@@ -54,6 +54,8 @@ const LoginPage = () => {
       if (adminData) {
         userType = "admin";
         console.log("User is an Admin:", adminData);
+        const userId = adminData?.id;
+        router.push(`/pages/home?userId=${userId}`);
       } else {
         // 2) If not found in Admins, check in Personnels
         console.log('Not found in "Admins"; querying "Personnels" table...');
@@ -76,14 +78,16 @@ const LoginPage = () => {
           userType = "personnel";
           console.log("User is a Personnel:", personnelData);
         }
-      }
-  
-      console.log("User type determined as:", userType);
+        console.log("User type determined as:", userType);
   
       // 3) Redirect (or do anything else) after figuring out user type
       console.log("Login process done. Redirecting to /home...");
-      router.push("/pages/dashboard");
+      const userId = personnelData?.id;
+      router.push(`/pages/home?userId=${userId}`);
+      }
   
+      
+
     } catch (err: any) {
       console.error("An unexpected error occurred:", err);
       setError("An unexpected error occurred.");

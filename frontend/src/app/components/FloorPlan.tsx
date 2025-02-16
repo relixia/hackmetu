@@ -1,133 +1,163 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 interface FloorPlanProps {
+  floorId: number;
+  floorId: number;
+}
+
+interface FloorData {
   width: number;
   length: number;
-  cellSize: number;
-  onDrop: (item: string, row: number, col: number) => void; // Add this line
 }
 
 interface DroppedItem {
+  type: "person" | "item";
+  id: number;
   name: string;
   width: number;
   height: number;
 }
 
-const FloorPlan: React.FC<FloorPlanProps> = ({ width, length }) => {
+const itemColors: Record<string, string> = {
+  "Table": "#4CAF50", // Green
+  "Cabinet": "#FFC107", // Yellow
+  "Door": "#9E9E9E", // Gray
+};
+
+// Function to determine item color
+const getItemColor = (itemName: string) => {
+  for (const key in itemColors) {
+    if (itemName.includes(key)) {
+      return itemColors[key];
+    }
+  }
+  return "#1E1E1E"; // Default Dark Background
+};
+
+const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
   const [cellSize, setCellSize] = useState(20);
-  const [containerSize, setContainerSize] = useState({ width: 0, length: 0 });
-  const [itemsInCells, setItemsInCells] = useState<(DroppedItem | null)[]>(Array(width * length).fill(null));
+  const [floorData, setFloorData] = useState<FloorData | null>(null);
+  const [itemsInCells, setItemsInCells] = useState<(DroppedItem | null)[]>([]);
 
   useEffect(() => {
-    const updateSize = () => {
-      const newContainerWidth = window.innerWidth * 0.6;
-      const newContainerLength = window.innerHeight * 0.8;
-      setContainerSize({ width: newContainerWidth, length: newContainerLength });
-
-      const maxCellSize = Math.min(newContainerWidth / width, newContainerLength / length);
-      setCellSize(Math.floor(maxCellSize));
+    const fetchFloorData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/fetch-floor/${floorId}`);
+        const { width, length } = response.data;
+        setFloorData({ width, length });
+        setItemsInCells(Array(width * length).fill(null));
+      } catch (error) {
+        console.error("Error fetching floor data:", error);
+      }
     };
 
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, [width, length]);
+    if (floorId) {
+      fetchFloorData();
+    }
+  }, [floorId]);
 
-  const handleDrop = (e: React.DragEvent, row: number, col: number) => {
+  useEffect(() => {
+    if (floorData) {
+      const updateSize = () => {
+        const newContainerWidth = window.innerWidth * 0.6;
+        const newContainerHeight = window.innerHeight * 0.8;
+        const maxCellSize = Math.min(newContainerWidth / floorData.width, newContainerHeight / floorData.length);
+        setCellSize(Math.floor(maxCellSize));
+      };
+
+      updateSize();
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }
+  }, [floorData]);
+
+  const handleDrop = async (e: React.DragEvent, row: number, col: number) => {
     e.preventDefault();
-  
-    const itemName = e.dataTransfer.getData("item");
-  
-    let itemWidth = 1; // Default: 1x1 cell
-    let itemHeight = 1; // Default: 1x1 cell
-  
-    // Define special rules for specific items (horizontal)
-    if (itemName === "Table Medium") {
-      itemWidth = 2; // Occupies 2 horizontal cells
-    } else if (itemName === "Table Large") {
-      itemWidth = 3; // Occupies 3 horizontal cells
-    }
-  
-    // Define special rules for vertical items
-    if (itemName === "Table Medium (Vertical)") {
-      itemWidth = 1; // Occupies 1 cell wide
-      itemHeight = 2; // Occupies 2 cells vertically
-    } else if (itemName === "Table Large (Vertical)") {
-      itemWidth = 1; // Occupies 1 cell wide
-      itemHeight = 3; // Occupies 3 cells vertically
-    } else if (itemName === "Table Large (Vertical)") {
-      itemWidth = 1; // Occupies 1 cell wide
-      itemHeight = 4; // Occupies 4 cells vertically
-    }
-  
-    // Check if the item fits within the grid boundaries
-    if (row + itemHeight > length || col + itemWidth > width) {
-      console.warn("Item is too large for the selected space!");
+    const personId = e.dataTransfer.getData("personId");
+    const personName = e.dataTransfer.getData("personName");
+
+    const newItems = [...itemsInCells];
+    const index = row * floorData.width + col;
+
+    // Check if cell is occupied before dropping the item
+    if (newItems[index] !== null) {
+      console.warn("Cell already occupied!");
       return;
     }
-  
-    const newItems = [...itemsInCells];
-  
-    // Check if the space is already occupied
-    for (let r = 0; r < itemHeight; r++) {
-      for (let c = 0; c < itemWidth; c++) {
-        const index = (row + r) * width + (col + c);
-        if (newItems[index] !== null) {
-          console.warn("Space is already occupied!");
-          return;
-        }
-      }
-    }
-  
-    // Place the item in the selected cell and its occupied area
-    for (let r = 0; r < itemHeight; r++) {
-      for (let c = 0; c < itemWidth; c++) {
-        const index = (row + r) * width + (col + c);
-        newItems[index] = { name: itemName, width: itemWidth, height: itemHeight };
-      }
-    }
-  
+
+    // Add the person to the grid
+    newItems[index] = {
+      type: "person",
+      id: parseInt(personId),
+      name: personName,
+      width: 1, // Assuming each person takes 1x1 space
+      height: 1,
+    };
+
     setItemsInCells(newItems);
+
+    // Update coordinates of the personnel in the backend
+    try {
+      await axios.post("http://localhost:8000/update-personnel-coordinates/", {
+        personnel_id: parseInt(personId),
+        x_coor: col,
+        y_coor: row,
+      });
+      console.log("Coordinates updated successfully!");
+    } catch (error) {
+      console.error("Failed to update coordinates:", error);
+    }
   };
-  
-  
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
+  if (!floorData) {
+    return <div className="text-center text-lg font-semibold text-gray-400">Loading Floor Data...</div>;
+  }
+
   return (
-    <div
-      className="flex justify-center items-center border border-gray-300 p-2 bg-white"
-      style={{ overflow: "hidden" }}
-    >
+    <div className="flex justify-center items-center bg-transparent p-0">
       <div
         className="grid gap-[1px]"
         style={{
-          gridTemplateColumns: `repeat(${width}, ${cellSize}px)`,
-          gridTemplateRows: `repeat(${length}, ${cellSize}px)`,
-          width: `${cellSize * width}px`,
-          height: `${cellSize * length}px`,
+          gridTemplateColumns: `repeat(${floorData?.width}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${floorData?.length}, ${cellSize}px)`,
+          width: `${cellSize * (floorData?.width || 0)}px`,
+          height: `${cellSize * (floorData?.length || 0)}px`,
         }}
       >
-        {Array.from({ length: length * width }).map((_, index) => {
-          const row = Math.floor(index / width);
-          const col = index % width;
+        {Array.from({ length: floorData?.length * floorData?.width }).map((_, index) => {
+          const row = Math.floor(index / (floorData?.width || 1));
+          const col = index % (floorData?.width || 1);
           const item = itemsInCells[index];
 
           return (
             <div
               key={index}
-              className="border bg-gray-200 flex justify-center items-center"
+              className="border border-gray-600 flex justify-center items-center cursor-crosshair transition-all hover:bg-[#444]"
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
-                backgroundColor: item ? "#d3d3d3" : "",
+                backgroundColor: item?.type === "person" ? "lightgray" : "transparent",
+                boxShadow: item ? "0px 0px 8px rgba(255, 255, 255, 0.2)" : "nonetransparent", // Optional: indicate dropped cells
               }}
               onDrop={(e) => handleDrop(e, row, col)}
               onDragOver={handleDragOver}
             >
-              {item && <span className="text-xs">{item.name}</span>}
+              {item?.type === "person" && (
+                <span
+                  style={{
+                    color: "black",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                  }}
+                >
+                  {item.name} {/* Display personnel ID in grid */}
+                </span>
+              )}
             </div>
           );
         })}

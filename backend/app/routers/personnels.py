@@ -1,9 +1,16 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from app.database import supabase
 from app.models import PersonnelModel
+from pydantic import BaseModel
 
 router = APIRouter()
 
+class UpdateCoordinatesRequest(BaseModel):
+    personnel_id: int
+    x_coor: int
+    y_coor: int
+
+# Fetch Personnel (existing)
 @router.get("/fetch-personnel/{personnel_id}")
 async def fetch_personnel(personnel_id: int):
     try:
@@ -14,14 +21,22 @@ async def fetch_personnel(personnel_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
-@router.get("/fetch-personnels")
-async def fetch_personnels():
+@router.get("/fetch-unplaced-users")
+async def fetch_unplaced_users():
     try:
-        personnels = supabase.table("Personnels").select('*').execute()
-        return personnels.data
+        # Fetch unplaced users
+        personnel = supabase.table("Personnels").select('*').is_('x_coor', None).is_('y_coor', None).execute()
+        
+        # If no unplaced users, return an empty list
+        if not personnel.data:
+            return []  # Return an empty array instead of raising an exception
+        
+        return personnel.data
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
+
+# Create Personnel (existing)
 @router.post("/create-personnel")
 async def create_personnel(personnel: PersonnelModel):
     try:
@@ -29,7 +44,8 @@ async def create_personnel(personnel: PersonnelModel):
         return new_personnel.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
-    
+
+# Delete Personnel (existing)
 @router.delete("/delete-personnel/{personnel_id}")
 async def delete_personnel(personnel_id: int):
     try:
@@ -40,6 +56,7 @@ async def delete_personnel(personnel_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
+# Update Personnel (existing)
 @router.put("/update-personnel/{personnel_id}")
 async def update_personnel(personnel_id: int, personnel: PersonnelModel):
     try:
@@ -50,6 +67,7 @@ async def update_personnel(personnel_id: int, personnel: PersonnelModel):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
 
+# Authorize Personnel (existing)
 @router.get("/authorize-personnel/{email}/{password}")
 async def authorize_personnel(email: str, password: str):
     try:
@@ -57,5 +75,23 @@ async def authorize_personnel(email: str, password: str):
         if not personnel.data:
             raise HTTPException(status_code=404, detail="Personnel not found")
         return personnel.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+# Update Personnel Coordinates (Modified to use Supabase)
+@router.post("/update-personnel-coordinates/")
+async def update_personnel_coordinates_endpoint(request: UpdateCoordinatesRequest):
+    try:
+        # Update the personnel's coordinates using Supabase
+        updated_personnel = supabase.table("Personnels").update({
+            "x_coor": request.x_coor,
+            "y_coor": request.y_coor
+        }).eq("id", request.personnel_id).execute()
+
+        if not updated_personnel.data:
+            raise HTTPException(status_code=404, detail="Personnel not found")
+        
+        return {"message": "Coordinates updated successfully"}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
