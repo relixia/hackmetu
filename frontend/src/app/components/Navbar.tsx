@@ -47,7 +47,19 @@ const Navbar = ({ setActiveComponent }) => {
         onClick={() => setActiveComponent('Dashboard')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
       >
-        Dashboard
+        Dashboard 
+      </button>
+      <button 
+        onClick={() => setActiveComponent('office-model')} 
+        className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
+      >
+        Auto-Layout
+      </button>
+      <button 
+        onClick={() => setActiveComponent('office-json')} 
+        className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
+      >
+        JSON to Layout
       </button>
     </nav>
   );

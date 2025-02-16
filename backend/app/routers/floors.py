@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from app.database import supabase
 from app.models import FloorModel
+import logging
 
 router = APIRouter()
 

@@ -98,6 +98,18 @@ const Layout = ({ children }: LayoutProps) => {
       }
     }, [activeComponent, router]);
 
+    useEffect(() => {
+      if (activeComponent === 'office-model') {
+        router.push('/pages/office-model');
+      }
+    }, [activeComponent, router]);
+
+    useEffect(() => {
+      if (activeComponent === 'office-json') {
+        router.push('/pages/office-json');
+      }
+    }, [activeComponent, router]);
+
 
   if (loading) {
     return (
