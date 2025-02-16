@@ -453,7 +453,7 @@ export default function FloorPage() {
     async function fetchData() {
       try {
         // building_id = 14 (adjust if needed)
-        const res = await fetch("http://localhost:8000/fetch-floors-with-personnels/14");
+        const res = await fetch("http://localhost:8000/fetch-latest-building-floors-with-personnels");
         const data: FloorData[] = await res.json();
         if (Array.isArray(data)) {
           setFloorsData(data);
