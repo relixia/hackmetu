@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import throttle from 'lodash/throttle';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import ThreeColumnLayout from './ThreeColumnLayoutData';
 
 // ------------------------------------------------
 // 1. Data Types
@@ -60,7 +61,7 @@ function FloorList({ floors }: { floors: FloorData[] }) {
 }
 
 // FloorCapacityView (2D)
-function FloorCapacityView({ floors }: { floors: FloorData[] }) {
+function FloorCapacityView({ floors, onCapacityClick }: { floors: FloorData[]; onCapacityClick: (floorId: number) => void; }) {
   const getFloorColor = (floor: FloorData) => {
     const ratio = floor.occupantCount / floor.capacity;
     if (ratio < 0.5) return 'rgba(0, 255, 0, 0.8)';
@@ -81,6 +82,7 @@ function FloorCapacityView({ floors }: { floors: FloorData[] }) {
                 ...styles.capacityBox,
                 backgroundColor: color,
               }}
+              onClick={() => onCapacityClick(floor.id)}
             >
               {floor.name}
             </div>
@@ -104,23 +106,28 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
 
     // ---------------------------
     // Define scale & dimensions
-    // (Adjust if your floors differ in size)
     // ---------------------------
     const SCALE = 1; 
     const FLOOR_HEIGHT = 3 * SCALE;
-    const WALL_THICKNESS = 0.5 * SCALE;
+    const WALL_THICKNESS = 0.7 * SCALE;
     const FLOOR_DETAILS = {
-      width: 12 * SCALE,      // e.g. 12 meters wide
-      depth: 8 * SCALE,       // e.g. 8 meters deep
+      width: 12 * SCALE,
+      depth: 8 * SCALE,
       windowSpacing: 1.5 * SCALE,
-      windowSize: 0.8 * SCALE,
+      windowSize: 0.9 * SCALE,
     };
-    const TABLE_SIZE = 1 * SCALE;    // 1x1 meter table top
+    const TABLE_SIZE = 1 * SCALE;    
     const TABLE_HEIGHT = 0.2 * SCALE; 
+
+    // -----------------------------------------
+    // Offset to shift the building higher (lowered from 5 to 1)
+    // -----------------------------------------
+    const BUILDING_OFFSET = 1;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    // Changed background to #303030
+    scene.background = new THREE.Color("#303030");
     sceneRef.current = scene;
 
     // Camera setup
@@ -130,7 +137,7 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       1,
       1000
     );
-    camera.position.set(floors.length * 4, floors.length * 6, floors.length * 8);
+    camera.position.set(floors.length * 8, floors.length * 6, floors.length * 8);
     cameraRef.current = camera;
 
     // Renderer
@@ -139,7 +146,7 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       powerPreference: 'high-performance'
     });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth * 0.8, window.innerHeight * 0.8);
+    renderer.setSize(window.innerWidth * 0.4, window.innerHeight * 0.6);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
@@ -189,7 +196,9 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       const floorPlate = new THREE.Mesh(floorGeometry, floorMaterial);
       floorPlate.receiveShadow = true;
       floorPlate.castShadow = true;
-      floorPlate.position.y = floorIndex * FLOOR_HEIGHT;
+
+      // Shift the building upward by BUILDING_OFFSET
+      floorPlate.position.y = floorIndex * FLOOR_HEIGHT + BUILDING_OFFSET;
       floorGroup.add(floorPlate);
 
       // Walls
@@ -233,7 +242,7 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       );
       frontWall.position.set(
         0,
-        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2,
+        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2 + BUILDING_OFFSET,
         FLOOR_DETAILS.depth / 2 - WALL_THICKNESS / 2
       );
       floorGroup.add(frontWall);
@@ -246,7 +255,7 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       backWall.rotation.y = Math.PI;
       backWall.position.set(
         0,
-        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2,
+        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2 + BUILDING_OFFSET,
         -FLOOR_DETAILS.depth / 2 + WALL_THICKNESS / 2
       );
       floorGroup.add(backWall);
@@ -259,7 +268,7 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       leftWall.rotation.y = -Math.PI / 2;
       leftWall.position.set(
         -FLOOR_DETAILS.width / 2 + WALL_THICKNESS / 2,
-        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2,
+        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2 + BUILDING_OFFSET,
         0
       );
       floorGroup.add(leftWall);
@@ -272,27 +281,29 @@ function Floor3DRenderer({ floors, onFloorClick }: { floors: FloorData[]; onFloo
       rightWall.rotation.y = Math.PI / 2;
       rightWall.position.set(
         FLOOR_DETAILS.width / 2 - WALL_THICKNESS / 2,
-        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2,
+        floorIndex * FLOOR_HEIGHT + FLOOR_HEIGHT / 2 + BUILDING_OFFSET,
         0
       );
       floorGroup.add(rightWall);
 
       // ----------------------------
-      // Table placement
+      // Table placement (RANDOMIZED)
       // ----------------------------
+      // We still use the count from the API (floorData.tableCoordinates.length),
+      // but randomize the actual x/z to place them randomly within floor boundaries.
       if (floorData.tableCoordinates) {
-        floorData.tableCoordinates.forEach(coord => {
+        floorData.tableCoordinates.forEach(() => {
           const tableGeometry = new THREE.BoxGeometry(TABLE_SIZE, TABLE_HEIGHT, TABLE_SIZE);
           const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
           const tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
 
-          // Convert top-left-based (0,0) to center-based
-          // so that (0,0) from DB is the top-left corner in 3D.
-          tableMesh.position.x = coord.x - FLOOR_DETAILS.width / 2;
-          tableMesh.position.z = coord.z - FLOOR_DETAILS.depth / 2;
+          // Random X / Z (leaving some margin so tables don't clip outside walls)
+          const randomX = Math.random() * (FLOOR_DETAILS.width - 2 * TABLE_SIZE) - (FLOOR_DETAILS.width / 2 - TABLE_SIZE);
+          const randomZ = Math.random() * (FLOOR_DETAILS.depth - 2 * TABLE_SIZE) - (FLOOR_DETAILS.depth / 2 - TABLE_SIZE);
 
-          // Place table on top of the floor plate
-          tableMesh.position.y = floorIndex * FLOOR_HEIGHT + WALL_THICKNESS / 2 + TABLE_HEIGHT / 2;
+          tableMesh.position.x = randomX;
+          tableMesh.position.z = randomZ;
+          tableMesh.position.y = floorIndex * FLOOR_HEIGHT + WALL_THICKNESS / 2 + TABLE_HEIGHT / 2 + BUILDING_OFFSET;
           tableMesh.castShadow = true;
           tableMesh.receiveShadow = true;
           floorGroup.add(tableMesh);
@@ -430,8 +441,9 @@ function FloorUsersList({ floorName, users }: { floorName: string; users: string
 export default function FloorPage() {
   const [floorsData, setFloorsData] = useState<FloorData[]>([]);
   const [selectedFloorId, setSelectedFloorId] = useState<number>(0);
+  const [showFloorList, setShowFloorList] = useState(false);
 
-  // This will map floorId -> { floorName, users[] }
+  // This will map floorId -> { floorName: string; users: string[] }
   const [floorUsersMapping, setFloorUsersMapping] = useState<{
     [key: number]: { floorName: string; users: string[] }
   }>({});
@@ -465,56 +477,52 @@ export default function FloorPage() {
     fetchData();
   }, []);
 
+  // Handler for 2D Capacity View box clicks
+  const handleCapacityClick = (floorId: number) => {
+    setSelectedFloorId(floorId);
+    setShowFloorList(true);
+  };
+
   return (
-    <div style={styles.pageContainer}>
-      <div style={styles.gradientOverlay}></div>
-      <FloorColorBar />
-      <div style={styles.mainContent}>
-        <h1 style={styles.pageTitle}>Floor Capacity Overview</h1>
-        <FloorList floors={floorsData} />
-        <FloorCapacityView floors={floorsData} />
+    <ThreeColumnLayout
+      // Left Column: Color Legend + 2D Capacity View + Floor List (shown on click)
+      leftComponent={
+        <>
+          <FloorColorBar />
+          <FloorList floors={floorsData} />
+          <FloorCapacityView floors={floorsData} onCapacityClick={handleCapacityClick} />
+          
+        </>
+      }
+      // Center Column: 3D Renderer
+      centerComponent={
         <Floor3DRenderer floors={floorsData} onFloorClick={setSelectedFloorId} />
-        
-        {selectedFloorId in floorUsersMapping && (
+      }
+      // Right Column: User List for selected floor
+      rightComponent={
+        (selectedFloorId in floorUsersMapping) && (
           <FloorUsersList
             floorName={floorUsersMapping[selectedFloorId].floorName}
             users={floorUsersMapping[selectedFloorId].users}
           />
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }
 
 // ------------------------------------------------
-// 4. Inline Styles
+// 4. Inline Styles (unchanged subcomponent styling)
 // ------------------------------------------------
 const styles: { [key: string]: React.CSSProperties } = {
-  pageContainer: {
-    display: 'flex',
-    position: 'relative',
-    minHeight: '100vh',
-    fontFamily: `'Roboto', sans-serif`,
-    color: '#FFFFFF',
-    overflow: 'hidden',
-    backgroundColor: '#0a0f1b',
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(115deg, #1f2b38 0%, #0a0f1b 70%)',
-    zIndex: -1,
-  },
   colorBarContainer: {
-    width: '200px',
+    width: '100%',
     padding: '1.5rem',
-    borderRight: '1px solid rgba(255,255,255,0.1)',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
     backdropFilter: 'blur(5px)',
     background: 'rgba(255, 255, 255, 0.05)',
     boxShadow: 'inset 0 0 10px rgba(0,0,0,0.3)',
+    marginBottom: '1.5rem',
   },
   legendTitle: {
     marginBottom: '1rem',
@@ -536,26 +544,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   legendLabel: {
     fontSize: '0.9rem',
   },
-  mainContent: {
-    flex: 1,
-    padding: '2rem',
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2rem',
-    backdropFilter: 'blur(6px)',
-  },
-  pageTitle: {
-    fontSize: '2rem',
-    fontWeight: 700,
-    marginBottom: '0.5rem',
-    textShadow: '0 0 8px rgba(0,255,255,0.8)',
-  },
   floorListContainer: {
     background: 'rgba(255,255,255,0.07)',
     borderRadius: '8px',
     padding: '1.5rem',
     boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+    marginBottom: '1.5rem',
   },
   sectionTitle: {
     fontSize: '1.6rem',
@@ -577,6 +571,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '1.5rem',
     borderRadius: '8px',
     boxShadow: '0 0 10px rgba(0,0,0,0.3)',
+    marginBottom: '1.5rem',
   },
   capacityBoxes: {
     display: 'flex',
@@ -601,7 +596,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '8px',
     padding: '1.5rem',
     boxShadow: '0 0 10px rgba(0,0,0,0.3)',
-    marginTop: '1rem',
   },
   usersListTitle: {
     fontSize: '1.6rem',
