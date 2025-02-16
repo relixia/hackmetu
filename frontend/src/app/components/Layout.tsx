@@ -48,7 +48,7 @@ const Layout = ({ children }: LayoutProps) => {
         const floors = response.data;
 
         if (floors && floors.length > 0) {
-          setActiveComponent('Floorplan'); // Default to Floorplan if floors exist
+          setActiveComponent('Data'); // Default to Floorplan if floors exist
           setSelectedFloorId(floors[0].id);
         } else {
           setActiveComponent('FloorForm'); // Otherwise, show FloorForm
