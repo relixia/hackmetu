@@ -17,14 +17,14 @@ const ProfileButton = ({ setActiveComponent, userId }: ProfileButtonProps) => {
 
   return (
     <button
-      onClick={handleProfileRedirect}
-      className="flex items-center space-x-6 p-6 bg-white shadow-lg rounded-full hover:bg-gray-100 transition text-2xl"
+      onClick={() => setActiveComponent('profile')}
+      className="p-8 bg-white shadow-lg rounded-full hover:bg-gray-100 transition"
     >
       <Image
-        src="/aholder.jpeg" // Update with dynamic image source if needed
+        src="/aholder.jpeg"
         alt="Profile"
-        width={80} // Increased size
-        height={80} // Increased size
+        width={100}  // ⬆ Bigger Circle
+        height={100} // ⬆ Bigger Circle
         className="rounded-full"
       />
     </button>

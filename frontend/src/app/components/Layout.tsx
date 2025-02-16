@@ -10,9 +10,21 @@ import FloorSidebarComponent from './FloorSidebarComponent';
 import FloorForm from './FloorForm';
 import FloorPlan from './FloorPlan';
 import ItemMenu from './ItemMenu';
+import PersonnelMenu from './PersonelMenu';
+import Floor3DAndUsers from './Data';
 
 interface LayoutProps {
   children: ReactNode;
+}
+
+export interface FloorData {
+  id: number;
+  name: string;
+  area: number;
+  occupantCount: number;
+  capacity: number;
+  tableCoordinates?: { x: number; z: number }[];
+  users?: string[];
 }
 
 const Layout = ({ children }: LayoutProps) => {
@@ -32,11 +44,10 @@ const Layout = ({ children }: LayoutProps) => {
         const floors = response.data;
 
         if (floors && floors.length > 0) {
-          setActiveComponent('Floorplan');
+          setActiveComponent('Floorplan'); // Default to Floorplan if floors exist
           setSelectedFloorId(floors[0].id);
-          setFloorDimensions({ width: floors[0].width, length: floors[0].length });
         } else {
-          setActiveComponent('FloorForm');
+          setActiveComponent('FloorForm'); // Otherwise, show FloorForm
         }
       } catch (error) {
         console.error('Error fetching floors:', error);
@@ -49,40 +60,68 @@ const Layout = ({ children }: LayoutProps) => {
     fetchFloors();
   }, []);
 
-  const handleFloorSelect = (id: number, width: number, length: number) => {
-    console.log(`Selected floor ID: ${id}, Width: ${width}, Length: ${length}`);
+  const handleFloorSelect = (id: number) => {
+    console.log(`Selected floor ID: ${id}`);
     setSelectedFloorId(id);
-    setFloorDimensions({ width, length });
   };
+
+  useEffect(() => {
+    fetch("http://localhost:8000/fetch-floors-with-personnels/14")
+      .then((res) => res.json())
+      .then((data: FloorData[]) => {
+        setFloorsData(data);
+      })
+      .catch((err) => console.error("Error fetching floors:", err));
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-lg font-bold text-gray-700">
+      <div className="flex items-center justify-center h-screen text-lg font-bold text-gray-300">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBF8EF] px-32 py-6">
-      <div className="relative flex justify-between items-center px-2 py-2 bg-[#FBF8EF] rounded-b-lg mx-12">
-      <ProfileButton setActiveComponent={setActiveComponent} userId={userId} />
-        <Navbar setActiveComponent={setActiveComponent} />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#303030]">
+      {/* 🔹 Fixed Top Bar with Navbar & Profile Button Slightly Lowered */}
+      <div className="fixed top-[20px] left-0 w-full z-50 bg-[#1A1A1A] shadow-md px-16 py-6 flex justify-between items-center border-b border-gray-700 h-[90px]">
+        <div className="flex items-center mt-24">
+          <ProfileButton setActiveComponent={setActiveComponent} />
+        </div>
+        <div className="flex items-center mt-4">
+          <Navbar setActiveComponent={setActiveComponent} />
+        </div>
       </div>
 
-      <main className="flex-1 p-16 bg-[#FBF8EF] rounded-t-lg mx-12">
+      {/* 🔹 Adjust Main Content with Proper Top Margin */}
+      <main className="flex-1 mx-auto mt-[120px] px-8 pb-8 overflow-auto">
         {activeComponent === 'Floorplan' ? (
           <ThreeColumnLayout 
             leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
             centerComponent={
-              selectedFloorId && floorDimensions ? (
-                <FloorPlan width={floorDimensions.width} length={floorDimensions.length} />
+              selectedFloorId ? (
+                <FloorPlan floorId={selectedFloorId} />
               ) : (
-                <div>Select a floor to view the floor plan.</div>
+                <div className="text-gray-400 text-center">Select a floor to view the floor plan.</div>
               )
             } 
             rightComponent={<ItemMenu cellSize={40} />} 
           />
+        ) : activeComponent === 'Staff' ? (
+          <ThreeColumnLayout 
+            leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
+            centerComponent={
+              selectedFloorId ? (
+                <FloorPlan floorId={selectedFloorId} />
+              ) : (
+                <div>Select a floor to view the floor plan.</div>
+              )
+            } 
+            rightComponent={<PersonnelMenu cellSize={40} />} 
+          />
+        ) : activeComponent === 'Data' ? (
+          <Floor3DAndUsers floors={floorsData} /> // ✅ Data Section Added Here
         ) : activeComponent === 'FloorForm' ? (
           <FloorForm onSubmit={(floors, totalSquareMeters) => console.log(floors, totalSquareMeters)} />
         ) : activeComponent === 'profile' ? (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';  // Import axios to handle API requests
+import axios from 'axios';
 
 interface Floor {
   length: number | '';
@@ -17,20 +17,17 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
   const [sameDimensions, setSameDimensions] = useState<boolean>(true);
   const [defaultDimensions, setDefaultDimensions] = useState<{ length: number | ''; width: number | '' }>({ length: '', width: '' });
 
-  // Handle floor count change
   const handleFloorCountChange = (value: number) => {
     setFloorCount(value);
     setFloors(Array.from({ length: value }, () => ({ length: defaultDimensions.length, width: defaultDimensions.width })));
   };
 
-  // Handle floor dimension changes
   const handleFloorChange = (index: number, field: 'length' | 'width', value: number | '') => {
     const updatedFloors = [...floors];
     updatedFloors[index][field] = value;
     setFloors(updatedFloors);
   };
 
-  // Handle toggle for same/different dimensions
   const toggleSameDimensions = () => {
     setSameDimensions(!sameDimensions);
     if (!sameDimensions) {
@@ -38,7 +35,6 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
     }
   };
 
-  // Handle default dimension change when all floors are the same
   const handleDefaultDimensionChange = (field: 'length' | 'width', value: number | '') => {
     setDefaultDimensions((prev) => {
       const updatedDimensions = { ...prev, [field]: value };
@@ -49,17 +45,14 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
     });
   };
 
-  // Calculate total square meters
   const calculateTotalSquareMeters = () => {
     const total = floors.reduce((sum, floor) => sum + (floor.length && floor.width ? floor.length * floor.width : 0), 0);
     setTotalSquareMeters(total);
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Send floor data and totalSquareMeters to the backend
       const response = await axios.post('http://localhost:8000/create-floor', { floors, totalSquareMeters });
       console.log('Building saved:', response.data);
       onSubmit(floors, totalSquareMeters);
@@ -69,55 +62,55 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-lg border border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">🏢 Bina Bilgileri</h2>
-        <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="flex flex-col items-center justify-center pt-20">
+      <div className="bg-[#1E1E1E] shadow-lg rounded-xl p-8 w-full max-w-2xl border border-gray-700">
+        <h2 className="text-4xl font-bold text-white mb-8 text-center">🏢 Building Information</h2>
+        <form onSubmit={handleSubmit} className="space-y-7">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Kat Sayısı</label>
+            <label className="block text-lg font-semibold text-gray-300 mb-2">Number of Floors</label>
             <input
               type="number"
               value={floorCount}
               onChange={(e) => handleFloorCountChange(Number(e.target.value) || '')}
-              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-              placeholder="Örn: 5"
+              className="w-full p-4 text-lg bg-[#2B2B2B] text-white border border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
+              placeholder="e.g., 5"
               required
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <input
               type="checkbox"
               checked={sameDimensions}
               onChange={toggleSameDimensions}
-              className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-6 h-6 bg-gray-800 border-gray-500 rounded"
             />
-            <label className="text-sm font-medium text-gray-700">Tüm katlar aynı mı?</label>
+            <label className="text-lg font-semibold text-gray-300">All floors have the same dimensions?</label>
           </div>
 
           {sameDimensions ? (
-            <div className="p-4 border rounded-lg bg-gray-50">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Tüm Katlar İçin Ölçüler</h3>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="p-6 border border-gray-600 rounded-lg bg-[#2B2B2B]">
+              <h3 className="text-lg font-semibold text-gray-300 mb-4">Dimensions for All Floors</h3>
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Length (m)</label>
                   <input
                     type="number"
                     value={defaultDimensions.length}
                     onChange={(e) => handleDefaultDimensionChange('length', Number(e.target.value) || '')}
-                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                    placeholder="Örn: 20"
+                    className="w-full p-4 text-lg bg-[#1E1E1E] text-white border border-gray-500 rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                    placeholder="e.g., 20"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
+                  <label className="block text-md font-medium text-gray-300 mb-2">Width (m)</label>
                   <input
                     type="number"
                     value={defaultDimensions.width}
                     onChange={(e) => handleDefaultDimensionChange('width', Number(e.target.value) || '')}
-                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                    placeholder="Örn: 25"
+                    className="w-full p-4 text-lg bg-[#1E1E1E] text-white border border-gray-500 rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                    placeholder="e.g., 25"
                     required
                   />
                 </div>
@@ -125,28 +118,28 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
             </div>
           ) : (
             floors.map((floor, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Kat {index + 1}</h3>
-                <div className="grid grid-cols-2 gap-3">
+              <div key={index} className="p-6 border border-gray-600 rounded-lg bg-[#2B2B2B]">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4">Floor {index + 1}</h3>
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Uzunluk (m)</label>
+                    <label className="block text-md font-medium text-gray-300 mb-2">Length (m)</label>
                     <input
                       type="number"
                       value={floor.length}
                       onChange={(e) => handleFloorChange(index, 'length', Number(e.target.value) || '')}
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                      placeholder="Örn: 20"
+                      className="w-full p-4 text-lg bg-[#1E1E1E] text-white border border-gray-500 rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="e.g., 20"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Genişlik (m)</label>
+                    <label className="block text-md font-medium text-gray-300 mb-2">Width (m)</label>
                     <input
                       type="number"
                       value={floor.width}
                       onChange={(e) => handleFloorChange(index, 'width', Number(e.target.value) || '')}
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
-                      placeholder="Örn: 25"
+                      className="w-full p-4 text-lg bg-[#1E1E1E] text-white border border-gray-500 rounded-md focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="e.g., 25"
                       required
                     />
                   </div>
@@ -158,22 +151,22 @@ const FloorForm: React.FC<FloorFormProps> = ({ onSubmit }) => {
           <button
             type="button"
             onClick={calculateTotalSquareMeters}
-            className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 transition"
+            className="w-full text-xl bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
           >
-            Metrekareyi Hesapla
+            Calculate Square Meters
           </button>
 
           {totalSquareMeters !== null && (
-            <p className="text-center text-md font-semibold text-gray-800 mt-3">
-              Toplam <span className="text-blue-600">{totalSquareMeters} m²</span> alanınız var.
+            <p className="text-center text-xl font-semibold text-gray-300 mt-4">
+              Total <span className="text-blue-400">{totalSquareMeters} m²</span>
             </p>
           )}
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg font-medium hover:opacity-90 transition"
+            className="w-full text-xl bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
           >
-            Kaydet & Devam Et
+            Save & Continue
           </button>
         </form>
       </div>

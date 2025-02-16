@@ -52,9 +52,9 @@ const FloorSidebarComponent: React.FC<FloorSidebarProps> = ({ onSelect }) => {
 
   const getCapacityColor = (population: number, capacity: number) => {
     const usage = (population / capacity) * 100;
-    if (usage <= 50) return "bg-green-500";
-    if (usage <= 80) return "bg-yellow-500";
-    return "bg-red-500";
+    if (usage <= 50) return "bg-green-700 hover:bg-green-600";
+    if (usage <= 80) return "bg-yellow-700 hover:bg-yellow-600";
+    return "bg-red-700 hover:bg-red-600";
   };
 
   const handleNextBuilding = () => {
@@ -72,51 +72,58 @@ const FloorSidebarComponent: React.FC<FloorSidebarProps> = ({ onSelect }) => {
   };
 
   return (
-    <div className="bg-[#896f22] backdrop-blur-md shadow-lg p-4 rounded-2xl w-56">
-      <h2 className="text-white text-lg font-semibold text-center mb-4">Floors</h2>
-      <div className="text-center text-white font-bold text-md mb-3">
-        Building ID: {currentBuilding}
+    <>
+      {/* 🔹 Building Title & Number - Centered */}
+      <div className="text-center mb-6">
+        <h1 className="text-white text-4xl font-bold tracking-wide">
+          Building
+        </h1>
+        <h2 className="text-white text-5xl font-extrabold mt-1">
+          {currentBuilding}
+        </h2>
       </div>
 
-      <div className="flex justify-between mb-4">
+      {/* 🔹 Navigation Buttons */}
+      <div className="flex justify-between my-4">
         <button
           onClick={handlePrevBuilding}
           disabled={buildings.findIndex((b) => b.id === currentBuilding) === 0}
-          className="bg-gray-300 text-black px-3 py-1 rounded-lg disabled:opacity-50"
+          className="bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
         >
           ◀ Prev
         </button>
         <button
           onClick={handleNextBuilding}
           disabled={buildings.findIndex((b) => b.id === currentBuilding) === buildings.length - 1}
-          className="bg-gray-300 text-black px-3 py-1 rounded-lg disabled:opacity-50"
+          className="bg-gray-800 text-white px-4 py-2 rounded-lg disabled:opacity-30 hover:bg-gray-700 transition"
         >
           Next ▶
         </button>
       </div>
 
+      {/* 🔹 Content Loader */}
       {loading ? (
-        <p className="text-white text-center">Loading...</p>
+        <p className="text-gray-400 text-center">Loading...</p>
       ) : error ? (
-        <p className="text-red-400 text-center">{error}</p>
+        <p className="text-red-500 text-center">{error}</p>
       ) : floors.length === 0 ? (
-        <p className="text-white text-center">No floors found.</p>
+        <p className="text-gray-400 text-center">No floors found.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {floors
             .filter((floor) => floor.building_id === currentBuilding)
             .map((floor) => (
               <li
                 key={floor.id}
                 onClick={() => onSelect(floor.id, floor.width, floor.length)}
-                className={`cursor-pointer text-white text-center p-3 rounded-lg transition duration-300 ${getCapacityColor(floor.population || 0, floor.capacity || 1)}`}
+                className={`cursor-pointer text-white text-center p-3 rounded-lg transition-transform duration-200 transform hover:scale-105 shadow-md ${getCapacityColor(floor.population || 0, floor.capacity || 1)}`}
               >
                 Floor {floor.number} ({floor.population || 0}/{floor.capacity || 1})
               </li>
             ))}
         </ul>
       )}
-    </div>
+    </>
   );
 };
 

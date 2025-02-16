@@ -90,3 +90,64 @@ async def update_floor(floor_id: int, floor: FloorModel):
         return updated_floor.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/fetch-floors-with-personnels/{building_id}")
+async def fetch_floors_with_personnels(building_id: int):
+    """
+    Fetch floors by building_id, then attach occupantCount, capacity, area, 
+    tableCoordinates, and user list from the Personnels table.
+    """
+    try:
+        # 1. Get all floors for the given building_id
+        floors_response = supabase.table("Floors").select("*").eq("building_id", building_id).execute()
+        floors_data = floors_response.data
+
+        if not floors_data:
+            raise HTTPException(status_code=404, detail="No floors found for this building.")
+
+        # 2. For each floor, fetch personnels and build the structure
+        result = []
+        for f in floors_data:
+            floor_id_db = f["id"]           # The actual ID in the Floors table
+            floor_number = f["number"]      # We'll treat 'number' as the front-end ID
+            length = f.get("length", 0)
+            width = f.get("width", 0)
+            area = length * width
+            capacity = area
+
+            # 2a. Fetch all personnels for this floor
+            personnel_response = supabase.table("Personnels").select("*").eq("floor_id", floor_id_db).execute()
+            personnel_data = personnel_response.data
+
+            # 2b. occupantCount is just how many personnels we have
+            occupant_count = len(personnel_data)
+
+            # 2c. Build tableCoordinates from x_coor, y_coor
+            table_coords = []
+            user_list = []
+            for p in personnel_data:
+                x_coor = p.get("x_coor", 0)
+                y_coor = p.get("y_coor", 0)
+                table_coords.append({"x": x_coor, "z": y_coor})
+
+                # For the user list, combine name + surname (or adapt as you like)
+                full_name = f"{p.get('name', '')} {p.get('surname', '')}".strip()
+                user_list.append(full_name)
+
+            # 2d. Build the final object for the front-end
+            floor_obj = {
+                "id": floor_number,               # from the 'number' column
+                "name": f"Floor {floor_number}",  # or any naming convention you prefer
+                "area": area,
+                "occupantCount": occupant_count,
+                "capacity": capacity,
+                "tableCoordinates": table_coords,
+                "users": user_list
+            }
+            result.append(floor_obj)
+
+        return result
+
+    except Exception as e:
+        logging.error(f"Error in fetch_floors_with_personnels: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
