@@ -54,3 +54,8 @@ class FloorModel(BaseModel):
 class UpdateObjectModel(BaseModel):
     x_coor: Optional[int] = None
     y_coor: Optional[int] = None
+
+class FeedbackModel(BaseModel):
+    title : str
+    content: str
+    personnel_id: int

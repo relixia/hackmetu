@@ -15,6 +15,10 @@ RUN npm install axios
 # Install the Supabase client library (if not already included in package.json)
 RUN npm install @supabase/supabase-js
 
+RUN npm install @fortawesome/react-fontawesome
+
+RUN npm install @fortawesome/free-solid-svg-icons
+
 # Copy the rest of your application code
 COPY . .
 
