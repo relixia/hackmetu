@@ -40,7 +40,8 @@ const LoginPage = () => {
           .from("Admins")
           .select("*")
           .eq("email", email)
-          .single();
+          .single()
+          ;
   
       if (adminSelectError && adminSelectError.code !== "PGRST116") {
         // "PGRST116" is "Row not found," which we want to ignore in this case
@@ -54,8 +55,8 @@ const LoginPage = () => {
       if (adminData) {
         userType = "admin";
         console.log("User is an Admin:", adminData);
-        const userId = adminData?.id;
-        router.push(`/pages/dashboard?userId=${userId}`);
+        const userId = adminData.id;
+        router.push(`/pages/home?userId=${userId}`);
       } else {
         // 2) If not found in Admins, check in Personnels
         console.log('Not found in "Admins"; querying "Personnels" table...');
@@ -64,7 +65,8 @@ const LoginPage = () => {
             .from("Personnels")
             .select("*")
             .eq("email", email)
-            .single();
+            .single()
+            ;
   
         if (personnelSelectError && personnelSelectError.code !== "PGRST116") {
           console.error("Personnel selection error:", personnelSelectError);
@@ -83,7 +85,7 @@ const LoginPage = () => {
       // 3) Redirect (or do anything else) after figuring out user type
       console.log("Login process done. Redirecting to /home...");
       const userId = personnelData?.id;
-      router.push(`/pages/home?userId=${userId}`);
+      router.push(`/pages/profile?userId=${userId}`);
       }
   
       
@@ -121,7 +123,7 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg
                          focus:outline-none focus:ring-2 focus:ring-blue-500
-                         focus:border-transparent"
+                         focus:border-transparent text-black"
               required
             />
           </div>
@@ -138,7 +140,7 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg
                          focus:outline-none focus:ring-2 focus:ring-blue-500
-                         focus:border-transparent"
+                         focus:border-transparent text-black"
               required
             />
           </div>
