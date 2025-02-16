@@ -3,7 +3,6 @@ import axios from "axios";
 
 interface FloorPlanProps {
   floorId: number;
-  floorId: number;
 }
 
 interface FloorData {
@@ -12,41 +11,25 @@ interface FloorData {
 }
 
 interface DroppedItem {
-  type: "person" | "item";
+  type: "person";
   id: number;
   name: string;
   width: number;
   height: number;
 }
 
-const itemColors: Record<string, string> = {
-  "Table": "#4CAF50", // Green
-  "Cabinet": "#FFC107", // Yellow
-  "Door": "#9E9E9E", // Gray
-};
-
-// Function to determine item color
-const getItemColor = (itemName: string) => {
-  for (const key in itemColors) {
-    if (itemName.includes(key)) {
-      return itemColors[key];
-    }
-  }
-  return "#1E1E1E"; // Default Dark Background
-};
-
-const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
+const FloorPlan2: React.FC<FloorPlanProps> = ({ floorId }) => {
   const [cellSize, setCellSize] = useState(20);
   const [floorData, setFloorData] = useState<FloorData | null>(null);
   const [itemsInCells, setItemsInCells] = useState<(DroppedItem | null)[]>([]);
 
+  // Fetch floor data
   useEffect(() => {
     const fetchFloorData = async () => {
       try {
         const response = await axios.get(`http://localhost:8000/fetch-floor/${floorId}`);
         const { width, length } = response.data;
         setFloorData({ width, length });
-        setItemsInCells(Array(width * length).fill(null));
       } catch (error) {
         console.error("Error fetching floor data:", error);
       }
@@ -57,6 +40,36 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   }, [floorId]);
 
+  // Fetch staff members and place them on the grid
+  useEffect(() => {
+    if (!floorData) return; // Wait for floor data before proceeding
+
+    const fetchStaffPersonnel = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/fetch-staff-personnel/${floorId}`);
+        const staffMembers: DroppedItem[] = response.data;
+
+        console.log("Fetched staff members:", staffMembers);
+
+        // Populate grid with staff members only
+        const newGrid = Array(floorData.width * floorData.length).fill(null);
+        staffMembers.forEach((person) => {
+          // Using person.x_coor and person.y_coor directly for proper index calculation
+          const index = person.y_coor * floorData.width + person.x_coor;
+          console.log(`Placing ${person.name} at index ${index} (x: ${person.x_coor}, y: ${person.y_coor})`);
+          newGrid[index] = person;
+        });
+
+        setItemsInCells([...newGrid]); // Force state update
+      } catch (error) {
+        console.error("Error fetching staff personnel:", error);
+      }
+    };
+
+    fetchStaffPersonnel();
+  }, [floorId, floorData]); // Runs after floorData is available
+
+  // Adjust cell size based on screen width
   useEffect(() => {
     if (floorData) {
       const updateSize = () => {
@@ -72,6 +85,7 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
   }, [floorData]);
 
+  // Handle dropping a staff member
   const handleDrop = async (e: React.DragEvent, row: number, col: number) => {
     e.preventDefault();
     const personId = e.dataTransfer.getData("personId");
@@ -91,25 +105,26 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
       type: "person",
       id: parseInt(personId),
       name: personName,
-      width: 1, // Assuming each person takes 1x1 space
+      width: 1,
       height: 1,
     };
 
     setItemsInCells(newItems);
 
-    // Update coordinates of the personnel in the backend
+    // Update coordinates of the staff in the backend
     try {
       await axios.post("http://localhost:8000/update-personnel-coordinates/", {
         personnel_id: parseInt(personId),
         x_coor: col,
         y_coor: row,
       });
-      console.log("Coordinates updated successfully!");
+      console.log("Staff coordinates updated successfully!");
     } catch (error) {
       console.error("Failed to update coordinates:", error);
     }
   };
 
+  // Handle drag over event
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -129,10 +144,9 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
           height: `${cellSize * (floorData?.length || 0)}px`,
         }}
       >
-        {Array.from({ length: floorData?.length * floorData?.width }).map((_, index) => {
-          const row = Math.floor(index / (floorData?.width || 1));
-          const col = index % (floorData?.width || 1);
-          const item = itemsInCells[index];
+        {itemsInCells.map((item, index) => {
+          const row = Math.floor(index / floorData.width);
+          const col = index % floorData.width;
 
           return (
             <div
@@ -142,7 +156,7 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
                 backgroundColor: item?.type === "person" ? "lightgray" : "transparent",
-                boxShadow: item ? "0px 0px 8px rgba(255, 255, 255, 0.2)" : "nonetransparent", // Optional: indicate dropped cells
+                boxShadow: item ? "0px 0px 8px rgba(255, 255, 255, 0.2)" : "none",
               }}
               onDrop={(e) => handleDrop(e, row, col)}
               onDragOver={handleDragOver}
@@ -155,7 +169,7 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
                     fontSize: "14px",
                   }}
                 >
-                  {item.name} {/* Display personnel ID in grid */}
+                  {item.name}
                 </span>
               )}
             </div>
@@ -166,4 +180,4 @@ const FloorPlan: React.FC<FloorPlanProps> = ({ floorId }) => {
   );
 };
 
-export default FloorPlan;
+export default FloorPlan2;

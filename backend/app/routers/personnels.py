@@ -95,3 +95,18 @@ async def update_personnel_coordinates_endpoint(request: UpdateCoordinatesReques
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/fetch-staff-personnel/{floor_id}")
+async def fetch_staff_personnel(floor_id: int):
+    try:
+        personnel = (
+            supabase.table("Personnels")
+            .select('*')
+            .eq("floor_id", floor_id)
+            .execute()
+        )
+
+        return personnel.data if personnel.data else []
+    except Exception as e:
+        print(f"Error fetching staff personnel: {e}")  # Debugging
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")

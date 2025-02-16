@@ -7,7 +7,8 @@ import ProfileButton from './ProfileButton';
 import ThreeColumnLayout from './ThreeColumnLayout';
 import FloorSidebarComponent from './FloorSidebarComponent';
 import FloorForm from './FloorForm';
-import FloorPlan from './FloorPlan';
+import FloorPlan1 from './FloorPlan1';
+import FloorPlan2 from './FloorPlan2';
 import ItemMenu from './ItemMenu';
 import PersonnelMenu from './PersonelMenu';
 import Floor3DAndUsers from './Data';
@@ -96,7 +97,7 @@ const Layout = ({ children }: LayoutProps) => {
             leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
             centerComponent={
               selectedFloorId ? (
-                <FloorPlan floorId={selectedFloorId} />
+                <FloorPlan1 floorId={selectedFloorId} />
               ) : (
                 <div className="text-gray-400 text-center">Select a floor to view the floor plan.</div>
               )
@@ -108,7 +109,7 @@ const Layout = ({ children }: LayoutProps) => {
             leftComponent={<FloorSidebarComponent onSelect={handleFloorSelect} />} 
             centerComponent={
               selectedFloorId ? (
-                <FloorPlan floorId={selectedFloorId} />
+                <FloorPlan2 floorId={selectedFloorId} />
               ) : (
                 <div>Select a floor to view the floor plan.</div>
               )
