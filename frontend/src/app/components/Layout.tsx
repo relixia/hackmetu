@@ -10,7 +10,7 @@ import FloorForm from './FloorForm';
 import FloorPlan from './FloorPlan';
 import ItemMenu from './ItemMenu';
 import PersonnelMenu from './PersonelMenu';
-import Floor3DAndUsers from './Data';
+import Floor3DAndUsers from './FloorPage';
 
 interface LayoutProps {
   children: ReactNode;
