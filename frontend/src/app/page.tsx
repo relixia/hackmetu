@@ -35,7 +35,7 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <div style={styles.pageContainer}>
       {/* Navigation Bar */}
       <nav style={styles.nav}>
         <div style={styles.navContainer}>
@@ -59,98 +59,16 @@ export default function Home() {
       {/* Building Input Section */}
       <section id="placement" style={styles.section}>
         <h2 style={styles.sectionTitle}>Bina Bilgileri</h2>
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>
-            Kat Sayısı:
-            <input
-              type="number"
-              value={floors}
-              onChange={(e) => setFloors(Number(e.target.value))}
-              style={styles.input}
-            />
-          </label>
-          <label style={styles.label}>
-            Metrekare (m²):
-            <input
-              type="number"
-              value={squareMeters}
-              onChange={(e) => setSquareMeters(Number(e.target.value))}
-              style={styles.input}
-            />
-          </label>
-        </div>
       </section>
 
       {/* Personnel Placement Section */}
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Personel Yerleşimi</h2>
-        <div style={styles.floorSelector}>
-          {Array.from({ length: floors }, (_, i) => (
-            <button
-              key={i + 1}
-              style={{
-                ...styles.floorButton,
-                ...(selectedFloor === i + 1 ? styles.activeFloorButton : {}),
-              }}
-              onClick={() => handleFloorChange(i + 1)}
-            >
-              Kat {i + 1}
-            </button>
-          ))}
-        </div>
-        <div style={styles.floorPlan}>
-          {Array.from({ length: squareMeters }, (_, i) => (
-            <div key={i} style={styles.gridCell}>
-              {personnel
-                .filter((p) => p.floor === selectedFloor && p.position.x === i % 10 && p.position.y === Math.floor(i / 10))
-                .map((p) => (
-                  <div
-                    key={p.id}
-                    style={styles.personnelCell}
-                    draggable
-                    onDragEnd={(e) => {
-                      const rect = e.target.getBoundingClientRect();
-                      const x = Math.floor((rect.left - e.currentTarget.parentElement.getBoundingClientRect().left) / 40);
-                      const y = Math.floor((rect.top - e.currentTarget.parentElement.getBoundingClientRect().top) / 40);
-                      handleDrag(p.id, x, y);
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faUser} />
-                  </div>
-                ))}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Personnel Form Section */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Personel Ekle</h2>
-        <form onSubmit={handleAddPersonnel} style={styles.form}>
-          <label style={styles.label}>
-            Ad:
-            <input type="text" name="name" required style={styles.input} />
-          </label>
-          <label style={styles.label}>
-            Rol:
-            <input type="text" name="role" required style={styles.input} />
-          </label>
-          <button type="submit" style={styles.ctaButton}>Personel Ekle</button>
-        </form>
       </section>
 
       {/* Density Analysis Section */}
       <section id="analysis" style={styles.section}>
         <h2 style={styles.sectionTitle}>Yoğunluk Analizi</h2>
-        <div style={styles.densityGrid}>
-          {Array.from({ length: floors }, (_, i) => (
-            <div key={i + 1} style={styles.densityCard}>
-              <h3>Kat {i + 1}</h3>
-              <p>Personel Sayısı: {personnel.filter((p) => p.floor === i + 1).length}</p>
-              <FontAwesomeIcon icon={faChartBar} size="2x" style={styles.densityIcon} />
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* Footer */}
@@ -163,12 +81,19 @@ export default function Home() {
 
 // Styles
 const styles = {
+  pageContainer: {
+    fontFamily: '"Roboto", sans-serif',
+    backgroundColor: '#121212',
+    color: 'white',
+    margin: 0,
+  },
   nav: {
-    backgroundColor: '#4a6cf7',
-    padding: '1rem 2rem',
+    backgroundColor: '#1a1a1a',
+    padding: '1.5rem 2.5rem',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
   },
   navContainer: {
     display: 'flex',
@@ -178,8 +103,8 @@ const styles = {
     margin: '0 auto',
   },
   logo: {
-    color: 'white',
-    fontSize: '1.5rem',
+    color: '#00ffcc',
+    fontSize: '1.8rem',
     fontWeight: 'bold',
   },
   navLinks: {
@@ -188,13 +113,17 @@ const styles = {
     gap: '2rem',
   },
   navLink: {
-    color: 'white',
+    color: '#fff',
     textDecoration: 'none',
-    fontSize: '1rem',
+    fontSize: '1.2rem',
+    transition: 'color 0.3s ease',
+  },
+  navLinkHover: {
+    color: '#00ffcc',
   },
   hero: {
     height: '50vh',
-    background: 'linear-gradient(135deg, #6e8efb, #4a6cf7)',
+    background: 'linear-gradient(135deg, #00bcd4, #4a90e2)',
     color: 'white',
     display: 'flex',
     flexDirection: 'column',
@@ -202,30 +131,40 @@ const styles = {
     justifyContent: 'center',
     textAlign: 'center',
     padding: '0 2rem',
+    boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.3)',
+    borderBottom: '2px solid rgba(255, 255, 255, 0.1)',
   },
   heroContent: {
     maxWidth: '800px',
   },
   heroTitle: {
-    fontSize: '3rem',
-    marginBottom: '1rem',
+    fontSize: '3.5rem',
+    marginBottom: '1.5rem',
+    fontFamily: '"Orbitron", sans-serif',
+    letterSpacing: '1px',
   },
   heroSubtitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.6rem',
     marginBottom: '2rem',
   },
   section: {
     padding: '4rem 2rem',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#1a1a1a',
     textAlign: 'center',
+    boxShadow: '0 0 20px rgba(0, 0, 0, 0.1)',
+    borderRadius: '10px',
+    margin: '2rem auto',
+    maxWidth: '90%',
   },
   sectionTitle: {
     fontSize: '2.5rem',
-    marginBottom: '2rem',
+    marginBottom: '1.5rem',
+    fontFamily: '"Orbitron", sans-serif',
+    color: '#00ffcc',
   },
   inputGroup: {
     display: 'flex',
-    gap: '2rem',
+    gap: '1.5rem',
     justifyContent: 'center',
     marginBottom: '2rem',
   },
@@ -233,31 +172,38 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
-    fontSize: '1rem',
+    fontSize: '1.1rem',
   },
   input: {
-    padding: '0.5rem',
+    padding: '0.8rem',
     fontSize: '1rem',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
+    borderRadius: '8px',
+    border: '2px solid #333',
+    background: '#222',
+    color: '#fff',
+    transition: 'border-color 0.3s ease',
+  },
+  inputFocus: {
+    borderColor: '#00ffcc',
   },
   floorSelector: {
     display: 'flex',
-    gap: '1rem',
+    gap: '1.5rem',
     justifyContent: 'center',
     marginBottom: '2rem',
   },
   floorButton: {
-    padding: '0.5rem 1rem',
-    fontSize: '1rem',
-    backgroundColor: '#4a6cf7',
+    padding: '0.6rem 1.2rem',
+    fontSize: '1.1rem',
+    backgroundColor: '#00bcd4',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
+    transition: 'background 0.3s ease',
   },
   activeFloorButton: {
-    backgroundColor: '#2a4cb7',
+    backgroundColor: '#007a8a',
   },
   floorPlan: {
     display: 'grid',
@@ -266,40 +212,43 @@ const styles = {
     justifyContent: 'center',
     margin: '0 auto',
     width: 'fit-content',
-    border: '1px solid #ccc',
-    padding: '10px',
-    backgroundColor: 'white',
+    border: '1px solid #444',
+    padding: '15px',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '8px',
   },
   gridCell: {
     width: '40px',
     height: '40px',
-    border: '1px solid #ccc',
+    border: '1px solid #333',
     position: 'relative',
+    borderRadius: '5px',
   },
   personnelCell: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#4a6cf7',
+    backgroundColor: '#00bcd4',
     color: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    cursor: 'grab',
+    cursor: 'move',
+    borderRadius: '4px',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    maxWidth: '400px',
+    maxWidth: '500px',
     margin: '0 auto',
   },
   ctaButton: {
     padding: '1rem 2rem',
-    fontSize: '1rem',
-    color: '#4a6cf7',
-    background: 'white',
-    border: 'none',
-    borderRadius: '5px',
+    fontSize: '1.2rem',
+    color: '#00bcd4',
+    background: 'transparent',
+    border: '2px solid #00bcd4',
+    borderRadius: '8px',
     cursor: 'pointer',
     transition: 'background 0.3s ease',
   },
@@ -311,22 +260,26 @@ const styles = {
     margin: '0 auto',
   },
   densityCard: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     padding: '2rem',
     borderRadius: '10px',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(10px)',
+    color: 'white',
+    border: '2px solid rgba(255, 255, 255, 0.1)',
   },
   densityIcon: {
-    color: '#4a6cf7',
+    color: '#00ffcc',
     marginTop: '1rem',
   },
   footer: {
-    backgroundColor: '#4a6cf7',
+    backgroundColor: '#1a1a1a',
     padding: '2rem',
     textAlign: 'center',
+    boxShadow: '0 -4px 8px rgba(0, 0, 0, 0.2)',
   },
   footerText: {
-    color: 'white',
+    color: '#bbb',
     fontSize: '1rem',
   },
 };
