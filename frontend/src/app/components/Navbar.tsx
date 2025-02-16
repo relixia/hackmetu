@@ -10,11 +10,12 @@ const Navbar = ({ setActiveComponent }) => {
         Floor Form
       </button>
       <button 
-        onClick={() => setActiveComponent('Floorplan')} 
+        onClick={() => setActiveComponent('Data')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
       >
-        Floorplan
+        Data
       </button>
+      
       <button 
         onClick={() => setActiveComponent('Editor3D')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
@@ -27,13 +28,14 @@ const Navbar = ({ setActiveComponent }) => {
       >
         360 View
       </button>
-
       <button 
-        onClick={() => setActiveComponent('Data')} 
+        onClick={() => setActiveComponent('Floorplan')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
       >
-        Data
+        Floorplan
       </button>
+
+      
       <button 
         onClick={() => setActiveComponent('Staff')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"

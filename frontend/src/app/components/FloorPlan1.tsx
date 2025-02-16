@@ -22,9 +22,9 @@ interface DroppedItem {
 
 // Mapping object names to their type IDs
 const objectTypeMapping: Record<string, number> = {
-  "Table Small": 5,
-  "Table Medium": 5,
-  "Table Large": 5,
+  "Workspace Small": 5,
+  "Workspace Medium": 5,
+  "Workspace Large": 5,
   "Cabinet": 4,
   "Door": 1,
 };
@@ -33,15 +33,15 @@ const objectTypeMapping: Record<string, number> = {
 const itemMenu = [
   { name: "Cabinet", width: 1, height: 1 },
   { name: "Door", width: 1, height: 2 },
-  { name: "Table Small", width: 2, height: 1 },
-  { name: "Table Medium", width: 2, height: 2 },
-  { name: "Table Large", width: 3, height: 2 },
+  { name: "Workspace Small", width: 2, height: 1 },
+  { name: "Workspace Medium", width: 2, height: 2 },
+  { name: "Workspace Large", width: 3, height: 2 },
 ];
 
 const itemColors: Record<string, string> = {
   "Cabinet": "#FFC107",
   "Door": "#9E9E9E",
-  "Table": "#4CAF50",
+  "Workspace": "#4CAF50",
 };
 
 // Determine item color
@@ -177,7 +177,7 @@ const FloorPlan1: React.FC<FloorPlanProps> = ({ floorId }) => {
     }
 
     // Determine state: Tables = true, Others = false
-    const isTable = newItem.name.includes("Table");
+    const isTable = newItem.name.includes("Workspace");
 
     // Save object placement in the backend using create-or-update-object
     try {
@@ -230,7 +230,7 @@ const FloorPlan1: React.FC<FloorPlanProps> = ({ floorId }) => {
             onDrop={(e) => handleDrop(e, Math.floor(index / floorData.width), index % floorData.width)}
             onDragOver={handleDragOver}
           >
-            {item && <span style={{ color: "black", fontWeight: "bold", fontSize: "12px" }}>{item.name}</span>}
+            {item && <span style={{ color: "black", fontWeight: "bold", fontSize: "12px" }}></span>}
           </div>
         ))}
       </div>
