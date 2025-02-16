@@ -152,6 +152,74 @@ async def fetch_floors_with_personnels(building_id: int):
         logging.error(f"Error in fetch_floors_with_personnels: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
     
+
+@router.get("/fetch-latest-building-floors-with-personnels")
+async def fetch_latest_building_floors_with_personnels():
+    """
+    Fetch floors of the latest building, then attach occupantCount, capacity, area, 
+    tableCoordinates, and user list from the Personnels table.
+    """
+    try:
+        # 1. Fetch the latest building based on the highest ID or latest timestamp
+        latest_building_response = supabase.table("Buildings").select("id").order("id", desc=True).limit(1).execute()
+        latest_building_data = latest_building_response.data
+
+        if not latest_building_data:
+            raise HTTPException(status_code=404, detail="No buildings found.")
+
+        latest_building_id = latest_building_data[0]["id"]
+
+        # 2. Fetch floors for this building
+        floors_response = supabase.table("Floors").select("*").eq("building_id", latest_building_id).execute()
+        floors_data = floors_response.data
+
+        if not floors_data:
+            raise HTTPException(status_code=404, detail="No floors found for this building.")
+
+        # 3. Process each floor
+        result = []
+        for f in floors_data:
+            floor_id_db = f["id"]
+            floor_number = f["number"]
+            length = f.get("length", 0)
+            width = f.get("width", 0)
+            area = length * width
+            capacity = area
+
+            # 4. Fetch personnels for this floor
+            personnel_response = supabase.table("Personnels").select("*").eq("floor_id", floor_id_db).execute()
+            personnel_data = personnel_response.data
+
+            occupant_count = len(personnel_data)
+            table_coords = []
+            user_list = []
+
+            for p in personnel_data:
+                x_coor = p.get("x_coor", 0)
+                y_coor = p.get("y_coor", 0)
+                table_coords.append({"x": x_coor, "z": y_coor})
+
+                full_name = f"{p.get('name', '')} {p.get('surname', '')}".strip()
+                user_list.append(full_name)
+
+            floor_obj = {
+                "id": floor_number,
+                "name": f"Floor {floor_number}",
+                "area": area,
+                "occupantCount": occupant_count,
+                "capacity": capacity,
+                "tableCoordinates": table_coords,
+                "users": user_list
+            }
+            result.append(floor_obj)
+
+        return result
+
+    except Exception as e:
+        logging.error(f"Error in fetch_latest_building_floors_with_personnels: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+
 @router.get("/fetch-floor-by-building/{building_id}/{floor_number}")
 async def fetch_floor_by_building(building_id: int, floor_number: int):
     try:

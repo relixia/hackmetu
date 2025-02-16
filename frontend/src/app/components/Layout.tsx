@@ -70,7 +70,7 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:8000/fetch-floors-with-personnels/14")
+    fetch("http://localhost:8000/fetch-latest-building-floors-with-personnels")
       .then((res) => res.json())
       .then((data: FloorData[]) => {
         setFloorsData(data);
