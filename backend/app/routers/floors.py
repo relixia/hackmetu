@@ -151,3 +151,85 @@ async def fetch_floors_with_personnels(building_id: int):
     except Exception as e:
         logging.error(f"Error in fetch_floors_with_personnels: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+    
+@router.get("/fetch-floor-by-building/{building_id}/{floor_number}")
+async def fetch_floor_by_building(building_id: int, floor_number: int):
+    try:
+        floor = supabase.table("Floors").select('*').eq("building_id", building_id).eq("number", floor_number).execute()
+        if not floor.data:
+            raise HTTPException(status_code=404, detail="Floor not found")
+        return floor.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/fetch-floors/{building_id}")
+async def fetch_floors_for_building(building_id: int):
+    try:
+        floors = supabase.table("Floors").select("*").filter("building_id", "eq", building_id).execute()
+        if not floors.data:
+            raise HTTPException(status_code=404, detail=f"No floors found for building {building_id}")
+        return floors.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/fetch-floor-id/{building_id}/{floor_number}")
+async def fetch_floor_id(building_id: int, floor_number: int):
+    try:
+        # Query the Floors table to get the floor ID based on building_id and floor number
+        floor = supabase.table("Floors").select("id").eq("building_id", building_id).eq("number", floor_number).execute()
+        
+        if floor.data and len(floor.data) > 0:
+            return {"id": floor.data[0]["id"]}
+        else:
+            raise HTTPException(status_code=404, detail="Floor not found")
+    except Exception as e:
+        logging.error(f"Error occurred while fetching floor ID: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching floor ID: {str(e)}")
+
+@router.post("/create-object")
+async def create_object(object_data: dict):
+    try:
+        # Extract object details
+        floor_id = object_data["floor_id"]
+        o_type = object_data["o_type"]
+        state = object_data["state"]
+        x_coor = object_data["x_coor"]
+        y_coor = object_data["y_coor"]
+        width = object_data["width"]
+        length = object_data["length"]
+
+        # Create list of objects to insert
+        objects_to_insert = []
+        for dx in range(width):
+            for dy in range(length):
+                new_x = x_coor + dx
+                new_y = y_coor + dy
+
+                objects_to_insert.append({
+                    "state": state,
+                    "floor_id": floor_id,
+                    "o_type": o_type,
+                    "x_coor": new_x,
+                    "y_coor": new_y
+                })
+
+        # Insert all objects at once
+        result = supabase.table("Objects").insert(objects_to_insert).execute()
+
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to insert objects")
+
+        return {"message": "Objects inserted successfully", "count": len(objects_to_insert)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")
+
+@router.get("/fetch-objects/{floor_id}")
+async def fetch_objects(floor_id: int):
+    try:
+        objects = supabase.table("Objects").select("*").eq("floor_id", floor_id).execute()
+        if not objects.data:
+            raise HTTPException(status_code=404, detail="No objects found")
+        return objects.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Supabase query failed: {str(e)}")

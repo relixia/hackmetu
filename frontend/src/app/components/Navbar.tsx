@@ -22,6 +22,13 @@ const Navbar = ({ setActiveComponent }) => {
         3D Editor
       </button>
       <button 
+        onClick={() => setActiveComponent('360 View')} 
+        className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
+      >
+        360 View
+      </button>
+
+      <button 
         onClick={() => setActiveComponent('Data')} 
         className="px-4 py-2 rounded-full hover:bg-[#333] transition text-gray-300 font-bold"
       >

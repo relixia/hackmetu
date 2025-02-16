@@ -115,6 +115,19 @@ const Layout = ({ children }: LayoutProps) => {
       fetchProfile();
     }, [userId]);
 
+    useEffect(() => {
+      if (activeComponent === 'Editor3D') {
+        router.push('/pages/3dview');
+      }
+    }, [activeComponent, router]);
+
+    useEffect(() => {
+      if (activeComponent === '360 View') {
+        router.push('/pages/360view');
+      }
+    }, [activeComponent, router]);
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-lg font-bold text-gray-300">
